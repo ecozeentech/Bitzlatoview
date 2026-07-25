@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class DeviceSession extends Model
 {
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return ['last_seen_at' => 'datetime', 'is_trusted' => 'boolean'];
+    }
 }

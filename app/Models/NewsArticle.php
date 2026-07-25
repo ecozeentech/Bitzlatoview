@@ -12,6 +12,7 @@ class NewsArticle extends Model
     {
         return [
             'related_assets' => 'array',
+            'published_at' => 'datetime',
         ];
     }
 }

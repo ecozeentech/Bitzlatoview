@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class EmailLog extends Model
 {
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return ['sent_at' => 'datetime', 'opened_at' => 'datetime', 'clicked_at' => 'datetime'];
+    }
 }

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             BillingSeeder::class,
             FaqSeeder::class,
+            FeatureFlagSeeder::class,
         ]);
     }
 }

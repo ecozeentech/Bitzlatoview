@@ -11,7 +11,9 @@ class WalletAccount extends Model
     protected $guarded = [];
 
     public const TYPE_PRIMARY = 'primary';
+
     public const TYPE_TRADING = 'trading';
+
     public const TYPE_INVESTMENT = 'investment';
 
     public const TYPES = [self::TYPE_PRIMARY, self::TYPE_TRADING, self::TYPE_INVESTMENT];

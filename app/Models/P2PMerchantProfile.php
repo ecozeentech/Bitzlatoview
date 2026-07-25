@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class P2PMerchantProfile extends Model
 {
@@ -12,8 +13,11 @@ class P2PMerchantProfile extends Model
 
     protected function casts(): array
     {
-        return [
-            'is_verified' => 'boolean',
-        ];
+        return ['is_verified' => 'boolean'];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

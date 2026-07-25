@@ -149,6 +149,13 @@ class LedgerService
         ?string $description = null,
         ?string $idempotencyKey = null,
     ): LedgerTransaction {
+        $idempotencyKey ??= (string) Str::uuid();
+
+        $existing = LedgerTransaction::where('idempotency_key', $idempotencyKey)->first();
+        if ($existing) {
+            return $existing;
+        }
+
         return DB::transaction(function () use ($from, $to, $asset, $amount, $referenceType, $referenceId, $description, $idempotencyKey) {
             $balance = $this->lockedBalance($from->id, $asset->id);
 
@@ -159,32 +166,26 @@ class LedgerService
             $balance->locked = bcsub((string) $balance->locked, $amount, 18);
             $balance->save();
 
-            LedgerEntry::create([
-                'ledger_transaction_id' => null,
-                'wallet_account_id' => $from->id,
-                'asset_id' => $asset->id,
-                'direction' => LedgerEntry::DEBIT,
-                'amount' => $amount,
-                'balance_after' => $balance->available,
-            ]);
-
             $toBalance = $this->lockedBalance($to->id, $asset->id);
             $toBalance->available = bcadd((string) $toBalance->available, $amount, 18);
             $toBalance->save();
 
             $transaction = LedgerTransaction::create([
-                'idempotency_key' => $idempotencyKey ?? (string) Str::uuid(),
+                'idempotency_key' => $idempotencyKey,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
                 'description' => $description,
                 'metadata' => ['type' => 'escrow_release'],
             ]);
 
-            LedgerEntry::where('wallet_account_id', $from->id)
-                ->whereNull('ledger_transaction_id')
-                ->latest('id')
-                ->first()
-                ?->update(['ledger_transaction_id' => $transaction->id]);
+            LedgerEntry::create([
+                'ledger_transaction_id' => $transaction->id,
+                'wallet_account_id' => $from->id,
+                'asset_id' => $asset->id,
+                'direction' => LedgerEntry::DEBIT,
+                'amount' => $amount,
+                'balance_after' => $balance->available,
+            ]);
 
             LedgerEntry::create([
                 'ledger_transaction_id' => $transaction->id,

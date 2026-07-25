@@ -10,6 +10,7 @@ class LedgerEntry extends Model
     protected $guarded = [];
 
     public const DEBIT = 'debit';
+
     public const CREDIT = 'credit';
 
     protected function casts(): array

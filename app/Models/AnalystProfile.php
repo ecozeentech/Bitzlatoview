@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AnalystProfile extends Model
 {
@@ -10,8 +11,11 @@ class AnalystProfile extends Model
 
     protected function casts(): array
     {
-        return [
-            'credential_verified' => 'boolean',
-        ];
+        return ['credential_verified' => 'boolean'];
+    }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(BillingPackage::class);
     }
 }

@@ -12,6 +12,7 @@ class BlogPost extends Model
     {
         return [
             'tags' => 'array',
+            'published_at' => 'datetime',
         ];
     }
 }

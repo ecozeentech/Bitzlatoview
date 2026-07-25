@@ -104,4 +104,54 @@ class User extends Authenticatable
     {
         return $this->hasMany(VirtualCard::class);
     }
+
+    public function p2pAds(): HasMany
+    {
+        return $this->hasMany(P2PAd::class);
+    }
+
+    public function p2pMerchantProfile(): HasOne
+    {
+        return $this->hasOne(P2PMerchantProfile::class);
+    }
+
+    public function copyAllocations(): HasMany
+    {
+        return $this->hasMany(CopyAllocation::class);
+    }
+
+    public function aiBotAllocations(): HasMany
+    {
+        return $this->hasMany(AiBotAllocation::class);
+    }
+
+    public function miningContracts(): HasMany
+    {
+        return $this->hasMany(MiningContract::class);
+    }
+
+    public function investmentSubscriptions(): HasMany
+    {
+        return $this->hasMany(InvestmentSubscription::class);
+    }
+
+    public function mt5Accounts(): HasMany
+    {
+        return $this->hasMany(Mt5Account::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function traderProfile(): HasOne
+    {
+        return $this->hasOne(TraderProfile::class);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status !== 'active';
+    }
 }
