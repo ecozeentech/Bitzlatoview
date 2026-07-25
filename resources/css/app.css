@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        @apply bg-background text-slate-50 font-sans antialiased;
+    }
+
+    ::selection {
+        @apply bg-brand/30 text-white;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .glass-card {
+        @apply rounded-2xl border border-border/80 bg-surface/80 shadow-glass backdrop-blur-xl;
+        background-image: linear-gradient(135deg, rgba(245, 179, 1, 0.04), transparent 45%);
+    }
+
+    .btn-brand {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-background transition hover:bg-brand-soft focus:outline-none focus:ring-2 focus:ring-brand/50;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-brand/50 hover:bg-surface-2;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted transition hover:bg-surface-2 hover:text-slate-100;
+    }
+
+    .input-field {
+        @apply w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-sm text-slate-100 placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand;
+    }
+
+    .label-field {
+        @apply mb-1.5 block text-sm font-medium text-muted;
+    }
+
+    .section-title {
+        @apply text-2xl font-bold tracking-tight text-slate-50 md:text-3xl;
+    }
+
+    .section-sub {
+        @apply mt-2 max-w-2xl text-sm text-muted md:text-base;
+    }
+
+    .price-up {
+        @apply font-mono text-success;
+    }
+
+    .price-down {
+        @apply font-mono text-danger;
+    }
+
+    .data-table {
+        @apply w-full text-left text-sm;
+    }
+
+    .data-table thead {
+        @apply border-b border-border text-xs uppercase tracking-wide text-muted;
+    }
+
+    .data-table th {
+        @apply px-3 py-3 font-medium;
+    }
+
+    .data-table td {
+        @apply border-b border-border/60 px-3 py-3;
+    }
+
+    .data-table tbody tr {
+        @apply transition hover:bg-surface-2/60;
+    }
+
+    .sidebar-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted transition hover:bg-surface-2 hover:text-slate-100;
+    }
+
+    .sidebar-link.active {
+        @apply bg-brand/10 font-semibold text-brand;
+    }
+
+    .badge {
+        @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
+    }
+
+    .badge-success {
+        @apply badge bg-success/15 text-success;
+    }
+
+    .badge-danger {
+        @apply badge bg-danger/15 text-danger;
+    }
+
+    .badge-warning {
+        @apply badge bg-brand/15 text-brand;
+    }
+
+    .badge-info {
+        @apply badge bg-info/15 text-info;
+    }
+
+    .badge-muted {
+        @apply badge bg-surface-2 text-muted;
+    }
+
+    .risk-banner {
+        @apply rounded-xl border border-brand/30 bg-brand/5 px-4 py-3 text-xs text-brand-soft;
+    }
+
+    .mega-panel {
+        @apply absolute left-0 top-full z-50 mt-2 hidden w-[720px] rounded-2xl border border-border bg-surface p-6 shadow-glass group-hover:block;
+    }
+
+    .stat-value {
+        @apply font-mono text-2xl font-semibold tracking-tight text-slate-50;
+    }
+
+    .page-shell {
+        @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    }
+}

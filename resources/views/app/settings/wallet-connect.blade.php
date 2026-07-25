@@ -1,0 +1,5 @@
+@extends('layouts.app-shell')
+@section('title', 'WalletConnect')
+@section('content')
+<h1 class="text-2xl font-bold mb-2">WalletConnect</h1><p class="risk-banner mb-6">External wallet balances are NOT custodial ledger balances. PROVIDER: WalletConnect project ID + wagmi/viem.</p><form method="POST" action="{{ route('app.settings.wallet-connect.store') }}" class="glass-card mb-6 grid gap-3 p-5 md:grid-cols-2">@csrf<input name="address" class="input-field" placeholder="0x..." required><input name="chain" class="input-field" value="ethereum"><select name="wallet_type" class="input-field"><option>metamask</option><option>trust</option><option>coinbase</option><option>rainbow</option><option>ledger</option><option>walletconnect</option></select><input name="label" class="input-field" placeholder="Label"><button class="btn-brand md:col-span-2">Connect wallet</button></form><div class="glass-card p-4">@foreach($wallets as $w)<div class="border-b border-border/40 py-2 text-sm font-mono">{{ $w->wallet_type }} · {{ $w->address }} · {{ $w->chain }}</div>@endforeach</div>
+@endsection

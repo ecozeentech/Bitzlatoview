@@ -1,0 +1,5 @@
+@extends('layouts.admin')
+@section('title', 'P2P Admin')
+@section('content')
+<div class="grid gap-4 lg:grid-cols-3"><div class="glass-card p-4"><h3 class="font-semibold mb-2">Ads</h3>@foreach($ads as $a)<div class="text-xs border-b border-border/40 py-2">{{ $a->side }} {{ $a->price }}</div>@endforeach</div><div class="glass-card p-4"><h3 class="font-semibold mb-2">Orders</h3>@foreach($orders as $o)<div class="text-xs border-b border-border/40 py-2">{{ $o->uuid }} · {{ $o->status }}</div>@endforeach</div><div class="glass-card p-4"><h3 class="font-semibold mb-2">Appeals</h3>@foreach($appeals as $ap)<div class="mb-3 border-b border-border/40 pb-3"><p class="text-xs">{{ $ap->reason }}</p><form method="POST" action="{{ route('admin.p2p.appeals.resolve',$ap->id) }}" class="mt-2 space-y-2">@csrf<select name="resolution" class="input-field"><option value="release">Release</option><option value="refund">Refund</option><option value="cancel">Cancel</option></select><input name="admin_resolution" class="input-field" placeholder="Resolution note" required><button class="btn-brand text-xs">Resolve</button></form></div>@endforeach</div></div>
+@endsection
