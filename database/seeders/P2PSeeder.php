@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Asset;
-use App\Models\P2PMerchantProfile;
 use App\Models\P2PAd;
+use App\Models\P2PMerchantProfile;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

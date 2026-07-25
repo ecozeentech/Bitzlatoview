@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\BlogPost;
 use App\Models\NewsArticle;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class BlogNewsSeeder extends Seeder
 {
@@ -21,7 +22,7 @@ class BlogNewsSeeder extends Seeder
             BlogPost::updateOrCreate(
                 ['title' => $post['title']],
                 $post + [
-                    'slug' => \Illuminate\Support\Str::slug($post['title']),
+                    'slug' => Str::slug($post['title']),
                     'content' => "<p>{$post['excerpt']}</p><p>This is placeholder editorial content for the Bitzlatoview blog CMS demo.</p>",
                     'author' => 'Bitzlatoview Team',
                     'status' => 'published',
@@ -41,7 +42,7 @@ class BlogNewsSeeder extends Seeder
             NewsArticle::updateOrCreate(
                 ['title' => $article['title']],
                 $article + [
-                    'slug' => \Illuminate\Support\Str::slug($article['title']),
+                    'slug' => Str::slug($article['title']),
                     'summary' => 'Simulated market news for demo purposes — not financial advice.',
                     'content' => '<p>Simulated market news content.</p>',
                     'source' => 'Bitzlatoview Newsroom',
