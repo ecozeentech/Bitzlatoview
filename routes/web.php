@@ -98,9 +98,7 @@ Route::view('/risk-disclosure', 'public.pages.risk-disclosure')->name('risk-disc
 Route::view('/aml-kyc-policy', 'public.pages.aml-kyc-policy')->name('aml-kyc-policy');
 Route::view('/cookie-policy', 'public.pages.cookie-policy')->name('cookie-policy');
 
-Route::get('/referrals', function () {
-    return auth()->check() ? redirect('/app/referrals') : redirect()->route('register');
-})->name('referrals.public');
+Route::get('/referrals', [HomeController::class, 'referralRedirect'])->name('referrals.public');
 
 /*
 |--------------------------------------------------------------------------
