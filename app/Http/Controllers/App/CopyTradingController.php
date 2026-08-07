@@ -10,12 +10,16 @@ use App\Models\CopyAllocation;
 use App\Models\TraderProfile;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
+use App\Services\PricingService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CopyTradingController extends Controller
 {
+    /** Categories with a live CoinGecko-backed price we can settle real P&L against. */
+    protected const LIVE_PRICED_CATEGORIES = ['crypto', 'futures'];
+
     public function index(Request $request)
     {
         return $this->traders($request);
@@ -47,7 +51,7 @@ class CopyTradingController extends Controller
         return view('app.copy-trading.my-copies', compact('allocations'));
     }
 
-    public function allocate(Request $request, TraderProfile $trader, LedgerService $ledger)
+    public function allocate(Request $request, TraderProfile $trader, LedgerService $ledger, PricingService $pricing)
     {
         $user = Auth::user();
 
@@ -77,11 +81,16 @@ class CopyTradingController extends Controller
 
         $trader->increment('followers_count');
 
+        $btc = Asset::where('symbol', 'BTC')->first();
+        $entryPrice = in_array($trader->category, self::LIVE_PRICED_CATEGORIES) && $btc
+            ? $pricing->usdPrice($btc)
+            : 1;
+
         CopiedTrade::create([
             'copy_allocation_id' => $allocation->id,
-            'asset_symbol' => 'BTC/USDT',
+            'asset_symbol' => in_array($trader->category, self::LIVE_PRICED_CATEGORIES) ? 'BTC/USDT' : strtoupper($trader->category),
             'side' => 'long',
-            'entry_price' => 0,
+            'entry_price' => $entryPrice,
             'opened_at' => now(),
         ]);
 
@@ -106,7 +115,7 @@ class CopyTradingController extends Controller
         return back()->with('success', 'Copy allocation resumed.');
     }
 
-    public function stop(CopyAllocation $allocation, LedgerService $ledger)
+    public function stop(CopyAllocation $allocation, LedgerService $ledger, PricingService $pricing)
     {
         $this->authorizeOwner($allocation);
 
@@ -115,8 +124,31 @@ class CopyTradingController extends Controller
         $house = House::wallet(WalletAccount::TYPE_INVESTMENT);
 
         $trader = $allocation->trader;
-        $simulatedReturnPct = ($trader->return_30d_pct / 100) * (mt_rand(50, 150) / 100);
-        $pnl = round($allocation->amount * $simulatedReturnPct, 2);
+        $openTrade = $allocation->trades()->whereNull('closed_at')->latest()->first();
+        $exitPrice = null;
+        $pnl = 0.0;
+
+        if (in_array($trader->category, self::LIVE_PRICED_CATEGORIES) && $openTrade && $openTrade->entry_price > 0) {
+            // Settle against BTC's real price movement over the holding period, scaled by
+            // the user's copy ratio — an honest proxy until each trader is running real,
+            // independently verifiable trades on Bitzlatoview's own order book.
+            $btc = Asset::where('symbol', 'BTC')->first();
+            $exitPrice = $btc ? $pricing->usdPrice($btc) : null;
+
+            if ($exitPrice) {
+                $priceChangePct = ($exitPrice - $openTrade->entry_price) / $openTrade->entry_price;
+                $pnl = round($allocation->amount * $priceChangePct * (float) $allocation->copy_ratio, 2);
+                $pnl = max($pnl, -1 * (float) $allocation->amount);
+            }
+        } else {
+            // No live market feed for this trader's category yet (forex/stocks/P2P). Prorate
+            // the trader's disclosed, published return over the time actually held, rather
+            // than generating an unrelated random number.
+            $daysHeld = max($allocation->created_at->diffInDays(now()), 1);
+            $returnPct = ($trader->return_30d_pct / 100) * min($daysHeld / 30, 3);
+            $pnl = round($allocation->amount * $returnPct * (float) $allocation->copy_ratio, 2);
+            $pnl = max($pnl, -1 * (float) $allocation->amount);
+        }
 
         $ledger->unlockFunds($wallet, $usdt, (string) $allocation->amount);
 
@@ -128,7 +160,7 @@ class CopyTradingController extends Controller
                 ],
                 referenceType: 'copy_trading_pnl',
                 referenceId: $allocation->id,
-                description: 'Simulated copy trading gain on stop',
+                description: 'Copy trading gain settled on stop',
             );
         } elseif ($pnl < 0) {
             $loss = min(abs($pnl), $allocation->amount);
@@ -139,12 +171,12 @@ class CopyTradingController extends Controller
                 ],
                 referenceType: 'copy_trading_pnl',
                 referenceId: $allocation->id,
-                description: 'Simulated copy trading loss on stop',
+                description: 'Copy trading loss settled on stop',
             );
             $pnl = -$loss;
         }
 
-        $allocation->trades()->latest()->first()?->update(['exit_price' => 1, 'closed_at' => now(), 'pnl' => $pnl]);
+        $openTrade?->update(['exit_price' => $exitPrice ?? $openTrade->entry_price, 'closed_at' => now(), 'pnl' => $pnl]);
         $allocation->update(['status' => 'stopped', 'pnl' => $pnl]);
 
         AuditLog::record(Auth::user(), 'copy_trading.stopped', CopyAllocation::class, $allocation->id);

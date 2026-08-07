@@ -84,8 +84,18 @@ class ForexController extends Controller
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
         $house = House::wallet(WalletAccount::TYPE_TRADING);
         $margin = round((self::MARGIN_PER_LOT * $position->lot_size) / $position->leverage, 2);
+        $pair = $position->pair;
 
-        $pnl = round($margin * (mt_rand(-40, 60) / 100), 2);
+        // Mark-to-market against the pair's current bid/ask. Bitzlatoview does not yet have
+        // a licensed live forex data feed connected (unlike crypto, which uses real CoinGecko
+        // prices) — until one is, rates only move when an admin updates them, so P&L reflects
+        // genuine price change rather than a random number.
+        $exitPrice = (float) ($position->side === 'buy' ? $pair->bid : $pair->ask);
+        $entryPrice = (float) $position->entry_price;
+        $direction = $position->side === 'buy' ? 1 : -1;
+        $notional = self::MARGIN_PER_LOT * $position->lot_size;
+        $pnl = $entryPrice > 0 ? round((($exitPrice - $entryPrice) / $entryPrice) * $notional * $direction, 2) : 0.0;
+        $pnl = max($pnl, -$margin);
 
         $ledger->unlockFunds($wallet, $usdt, (string) $margin);
 
@@ -97,7 +107,7 @@ class ForexController extends Controller
                 ],
                 referenceType: 'forex_pnl',
                 referenceId: $position->id,
-                description: 'Forex position closed with gain (simulated)',
+                description: 'Forex position closed with gain',
             );
         } elseif ($pnl < 0) {
             $loss = min(abs($pnl), $margin);
@@ -108,7 +118,7 @@ class ForexController extends Controller
                 ],
                 referenceType: 'forex_pnl',
                 referenceId: $position->id,
-                description: 'Forex position closed with loss (simulated)',
+                description: 'Forex position closed with loss',
             );
             $pnl = -$loss;
         }

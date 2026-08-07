@@ -9,6 +9,7 @@ use App\Models\FuturesMarket;
 use App\Models\FuturesPosition;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
+use App\Services\PricingService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,7 @@ class FuturesController extends Controller
         return view('app.futures.index', compact('markets', 'positions', 'history'));
     }
 
-    public function store(Request $request, FuturesMarket $market, LedgerService $ledger)
+    public function store(Request $request, FuturesMarket $market, LedgerService $ledger, PricingService $pricing)
     {
         $user = Auth::user();
 
@@ -35,7 +36,8 @@ class FuturesController extends Controller
             'margin_mode' => ['required', 'in:cross,isolated'],
         ]);
 
-        $entryPrice = (float) $market->mark_price;
+        $entryPrice = $pricing->usdPrice($market->asset) ?: (float) $market->mark_price;
+        $market->update(['mark_price' => $entryPrice, 'index_price' => $entryPrice]);
         $notional = $entryPrice * $data['quantity'];
         $margin = round($notional / $data['leverage'], 2);
 
@@ -73,7 +75,7 @@ class FuturesController extends Controller
         return back()->with('success', "Opened {$data['side']} position on {$market->symbol} at {$data['leverage']}x with \${$margin} margin.");
     }
 
-    public function close(FuturesPosition $position, LedgerService $ledger)
+    public function close(FuturesPosition $position, LedgerService $ledger, PricingService $pricing)
     {
         abort_unless($position->user_id === Auth::id(), 403);
         abort_unless($position->status === 'open', 400);
@@ -82,8 +84,13 @@ class FuturesController extends Controller
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
         $house = House::wallet(WalletAccount::TYPE_TRADING);
 
-        $pnl = round($position->margin * (mt_rand(-70, 100) / 100), 2);
-        $pnl = max($pnl, -$position->margin);
+        $market = $position->market;
+        $exitPrice = $pricing->usdPrice($market->asset) ?: (float) $market->mark_price;
+        $market->update(['mark_price' => $exitPrice, 'index_price' => $exitPrice]);
+
+        $direction = $position->side === 'long' ? 1 : -1;
+        $pnl = round(($exitPrice - (float) $position->entry_price) * (float) $position->quantity * $direction, 2);
+        $pnl = max($pnl, -1 * (float) $position->margin); // isolated margin: cannot lose more than the margin posted
 
         $ledger->unlockFunds($wallet, $usdt, (string) $position->margin);
 
@@ -95,7 +102,7 @@ class FuturesController extends Controller
                 ],
                 referenceType: 'futures_pnl',
                 referenceId: $position->id,
-                description: 'Futures position closed with gain (simulated)',
+                description: 'Futures position closed with gain',
             );
         } elseif ($pnl < 0) {
             $loss = min(abs($pnl), $position->margin);
@@ -106,7 +113,7 @@ class FuturesController extends Controller
                 ],
                 referenceType: 'futures_pnl',
                 referenceId: $position->id,
-                description: 'Futures position closed with loss (simulated)',
+                description: 'Futures position closed with loss',
             );
             $pnl = -$loss;
         }
