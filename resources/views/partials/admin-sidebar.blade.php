@@ -47,6 +47,7 @@
         'System' => [
             ['Feature Flags', 'admin/settings/feature-flags'],
             ['Platform Settings', 'admin/settings'],
+            ['Branding', 'admin/settings/branding'],
         ],
     ];
 @endphp
