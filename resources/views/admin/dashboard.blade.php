@@ -25,7 +25,8 @@
     <div class="grid gap-4 lg:grid-cols-2">
         <div class="glass-card p-5">
             <h2 class="mb-3 font-semibold">Recent Users</h2>
-            <table class="data-table">
+            <div class="overflow-x-auto">
+                <table class="data-table">
                 <thead><tr><th>Name</th><th>Country</th><th>KYC</th><th>Joined</th></tr></thead>
                 <tbody>
                     @foreach ($recentUsers as $u)
@@ -38,11 +39,13 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="glass-card p-5">
             <h2 class="mb-3 font-semibold">Recent Withdrawals</h2>
-            <table class="data-table">
+            <div class="overflow-x-auto">
+                <table class="data-table">
                 <thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Status</th></tr></thead>
                 <tbody>
                     @foreach ($recentWithdrawals as $w)
@@ -55,6 +58,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

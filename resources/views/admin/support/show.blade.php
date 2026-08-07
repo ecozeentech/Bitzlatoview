@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="mx-auto max-w-2xl space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">{{ $ticket->subject }} — {{ $ticket->user->email }}</h1>
         @if ($ticket->status !== 'closed')
             <form method="POST" action="{{ route('admin.support.close', $ticket) }}">@csrf<button class="btn-outline text-sm">Close Ticket</button></form>

@@ -178,7 +178,7 @@
         <div class="glass-card p-5">
             <p class="mb-3 text-sm font-semibold text-text-muted">Sample sell ad</p>
             <div class="rounded-lg bg-surface-2/60 p-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <span class="pill-success">Verified Merchant</span>
                     <span class="text-xs text-text-muted">98.7% completion</span>
                 </div>

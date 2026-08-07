@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="mx-auto max-w-2xl space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">{{ $ticket->subject }}</h1>
         <span class="pill-warning">{{ $ticket->status }}</span>
     </div>

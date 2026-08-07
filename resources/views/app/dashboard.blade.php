@@ -68,7 +68,8 @@
                 <h2 class="font-semibold">Top Gainers (24h)</h2>
                 <a href="/markets/top-gainers" class="text-xs text-brand hover:underline">View all</a>
             </div>
-            <table class="data-table">
+            <div class="overflow-x-auto">
+                <table class="data-table">
                 <thead><tr><th>Pair</th><th>Price</th><th>Change</th></tr></thead>
                 <tbody>
                     @foreach ($topGainers as $market)
@@ -80,6 +81,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="glass-card p-5">

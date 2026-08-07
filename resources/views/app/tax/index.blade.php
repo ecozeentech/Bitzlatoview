@@ -35,7 +35,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Report History</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Year</th><th>Method</th><th>Income</th><th>Fees</th><th>Generated</th><th></th></tr></thead>
             <tbody>
                 @forelse ($reports as $r)
@@ -52,6 +53,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

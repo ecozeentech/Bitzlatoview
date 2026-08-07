@@ -28,7 +28,7 @@
 
     @foreach ($accounts as $account)
         <div class="glass-card p-6">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p class="font-semibold">{{ $account->broker_name }} — #{{ $account->mt5_login }}</p>
                     <p class="text-xs text-text-muted">{{ $account->server_name }} · {{ ucfirst($account->account_type) }} · 1:{{ $account->leverage }} · {{ $account->currency }}</p>
@@ -43,7 +43,8 @@
             </div>
             <p class="mt-2 text-xs text-text-muted">Last sync: {{ $account->last_sync_at?->diffForHumans() ?? 'Never' }}</p>
 
-            <table class="data-table mt-3">
+            <div class="overflow-x-auto">
+                <table class="data-table mt-3">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Volume</th><th>Open</th><th>Current</th><th>P&amp;L</th></tr></thead>
                 <tbody>
                     @forelse ($account->positions as $pos)
@@ -60,6 +61,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     @endforeach
 </div>

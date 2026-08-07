@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6" x-data="{ showSettings: false }">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">Virtual Cards</h1>
         <button type="button" @click="showSettings = !showSettings" class="btn-outline text-sm">Card Settings</button>
     </div>

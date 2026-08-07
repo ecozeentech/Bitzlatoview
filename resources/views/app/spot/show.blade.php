@@ -27,7 +27,8 @@
         </div>
         <div class="glass-card p-4">
             <h3 class="mb-2 text-sm font-semibold">Recent Trades</h3>
-            <table class="w-full text-xs">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
                 @forelse ($recentTrades as $t)
                     <tr>
                         <td class="py-0.5 font-numeric">${{ number_format($t->price, 2) }}</td>
@@ -38,6 +39,7 @@
                     <tr><td class="text-text-muted">No trades yet.</td></tr>
                 @endforelse
             </table>
+            </div>
         </div>
     </div>
 
@@ -113,7 +115,8 @@
 
     <div class="glass-card p-5">
         <h3 class="mb-3 font-semibold">Open Orders</h3>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Side</th><th>Type</th><th>Price</th><th>Qty</th><th>Filled</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 @forelse ($openOrders as $o)
@@ -136,11 +139,13 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5">
         <h3 class="mb-3 font-semibold">Order History</h3>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Side</th><th>Type</th><th>Price</th><th>Qty</th><th>Status</th><th>Date</th></tr></thead>
             <tbody>
                 @forelse ($orderHistory as $o)
@@ -157,6 +162,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

@@ -30,7 +30,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Connected Wallets</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Provider</th><th>Address</th><th>Chain</th><th>Connected</th><th></th></tr></thead>
             <tbody>
                 @forelse ($wallets as $w)
@@ -46,6 +47,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 

@@ -68,7 +68,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Swap History</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Date</th><th>Wallet</th><th>From</th><th>To</th><th>Fee</th></tr></thead>
             <tbody>
                 @forelse ($history as $h)
@@ -84,6 +85,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

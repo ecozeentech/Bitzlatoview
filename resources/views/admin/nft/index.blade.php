@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6" x-data="{ showCreate: false, manage: null }">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">NFT Collections</h1>
         <button type="button" @click="showCreate = !showCreate" class="btn-brand text-sm">+ New Collection</button>
     </div>

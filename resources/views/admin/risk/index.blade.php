@@ -6,7 +6,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Open Compliance Alerts</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>User</th><th>Type</th><th>Severity</th><th>Details</th><th></th></tr></thead>
             <tbody>
                 @forelse ($alerts as $a)
@@ -22,11 +23,13 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Elevated Risk Scores</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>User</th><th>Score</th><th>Level</th></tr></thead>
             <tbody>
                 @forelse ($riskScores as $r)
@@ -40,6 +43,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

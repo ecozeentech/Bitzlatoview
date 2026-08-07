@@ -1,5 +1,8 @@
 <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:px-6">
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 sm:gap-4">
+        <button type="button" @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-2 text-text-muted hover:bg-surface-2 hover:text-text-main lg:hidden" aria-label="Toggle menu">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <a href="{{ url('/') }}" class="flex items-center gap-2">
             <x-site-logo textClass="hidden text-lg font-extrabold sm:inline" />
         </a>
