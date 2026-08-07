@@ -86,18 +86,21 @@
         </button>
     </div>
 
-    <div x-show="mobileOpen" x-transition class="border-t border-border px-4 py-4 lg:hidden">
-        <div class="grid grid-cols-2 gap-2 text-sm">
-            <a href="/markets" class="nav-link">Markets</a>
-            <a href="/crypto" class="nav-link">Spot</a>
-            <a href="/p2p" class="nav-link">P2P</a>
-            <a href="/futures" class="nav-link">Futures</a>
-            <a href="/copy-trading" class="nav-link">Copy Trading</a>
-            <a href="/ai-trading-bot" class="nav-link">AI Bots</a>
-            <a href="/mining" class="nav-link">Mining</a>
-            <a href="/nft" class="nav-link">NFT</a>
-            <a href="/news" class="nav-link">News</a>
-            <a href="/blog" class="nav-link">Blog</a>
+    <div x-show="mobileOpen" x-transition x-cloak class="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-border px-4 py-4 lg:hidden" x-data="{ openSection: null }">
+        <div class="space-y-1">
+            @foreach ($megaMenu as $label => $items)
+                <div class="border-b border-border/60">
+                    <button type="button" class="flex w-full items-center justify-between py-3 text-left text-sm font-medium" @click="openSection = openSection === '{{ $label }}' ? null : '{{ $label }}'">
+                        {{ $label }}
+                        <svg class="h-4 w-4 shrink-0 transition-transform" :class="openSection === '{{ $label }}' ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <div x-show="openSection === '{{ $label }}'" x-cloak x-transition class="grid grid-cols-2 gap-1 pb-3 text-sm">
+                        @foreach ($items as [$itemLabel, $href])
+                            <a href="{{ $href }}" class="nav-link">{{ $itemLabel }}</a>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
         </div>
         <div class="mt-4 flex gap-3">
             @auth
