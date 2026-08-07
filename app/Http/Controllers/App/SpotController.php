@@ -9,7 +9,7 @@ use App\Models\Order;
 use App\Models\Trade;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
-use App\Support\House;
+use App\Services\SpotMatchingEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,16 +36,24 @@ class SpotController extends Controller
         $recentTrades = Trade::whereHas('order', fn ($q) => $q->where('market_pair_id', $market->id))
             ->latest()->take(10)->get();
 
+        // The real order book: other users' resting limit orders, best price first.
+        $bids = Order::where('market_pair_id', $market->id)->where('side', 'buy')
+            ->whereIn('status', ['new', 'partially_filled'])->whereNotNull('price')
+            ->orderByDesc('price')->take(10)->get();
+        $asks = Order::where('market_pair_id', $market->id)->where('side', 'sell')
+            ->whereIn('status', ['new', 'partially_filled'])->whereNotNull('price')
+            ->orderBy('price')->take(10)->get();
+
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_TRADING]);
         $baseBalance = $wallet->balanceFor($market->baseAsset);
         $quoteBalance = $wallet->balanceFor($market->quoteAsset);
 
         $markets = MarketPair::with('baseAsset', 'quote')->where('is_active', true)->get();
 
-        return view('app.spot.show', compact('market', 'openOrders', 'orderHistory', 'recentTrades', 'baseBalance', 'quoteBalance', 'markets'));
+        return view('app.spot.show', compact('market', 'openOrders', 'orderHistory', 'recentTrades', 'baseBalance', 'quoteBalance', 'markets', 'bids', 'asks'));
     }
 
-    public function store(Request $request, string $symbol, LedgerService $ledger)
+    public function store(Request $request, string $symbol, LedgerService $ledger, SpotMatchingEngine $engine)
     {
         $market = MarketPair::where('symbol', $symbol)->with(['baseAsset', 'quoteAsset', 'quote'])->firstOrFail();
         $user = Auth::user();
@@ -57,7 +65,6 @@ class SpotController extends Controller
             'price' => ['nullable', 'numeric', 'gt:0'],
         ]);
 
-        $currentPrice = (float) ($market->quote->price ?? 0);
         $limitPrice = $data['price'] ?? null;
 
         if ($data['type'] === 'limit' && ! $limitPrice) {
@@ -65,6 +72,19 @@ class SpotController extends Controller
         }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_TRADING]);
+        $feePct = (float) ($data['type'] === 'market' ? $market->taker_fee_pct : $market->maker_fee_pct) / 100;
+
+        // A market order needs its worst-case cost/quantity available up front since it has
+        // no resting price to lock against — check (but don't lock) before matching.
+        if ($data['type'] === 'market' && $data['side'] === 'buy') {
+            $referencePrice = $this->bestOppositePrice($market, 'buy') ?? (float) ($market->quote->price ?? 0);
+            $estimatedCost = $data['quantity'] * $referencePrice * (1 + $feePct);
+            if ($wallet->balanceFor($market->quoteAsset)->available < $estimatedCost) {
+                return back()->with('error', 'Insufficient balance to place this order.');
+            }
+        } elseif ($data['type'] === 'market' && $wallet->balanceFor($market->baseAsset)->available < $data['quantity']) {
+            return back()->with('error', 'Insufficient balance to place this order.');
+        }
 
         $order = Order::create([
             'user_id' => $user->id,
@@ -77,96 +97,60 @@ class SpotController extends Controller
             'status' => 'new',
         ]);
 
-        $willFillNow = $data['type'] === 'market'
-            || ($data['side'] === 'buy' && $limitPrice >= $currentPrice)
-            || ($data['side'] === 'sell' && $limitPrice <= $currentPrice);
+        $filled = $engine->match($order, $market);
+        $order->refresh();
+        $remaining = (float) $order->quantity - (float) $order->filled_quantity;
 
-        $fillPrice = $data['type'] === 'market' ? $currentPrice : $limitPrice;
-        $feePct = (float) ($data['type'] === 'market' ? $market->taker_fee_pct : $market->maker_fee_pct) / 100;
+        if ($remaining <= 0) {
+            AuditLog::record($user, 'order.filled', Order::class, $order->id);
 
-        if (! $willFillNow) {
-            try {
-                if ($data['side'] === 'buy') {
-                    $ledger->lockFunds($wallet, $market->quoteAsset, (string) ($data['quantity'] * $limitPrice * (1 + $feePct)));
-                } else {
-                    $ledger->lockFunds($wallet, $market->baseAsset, (string) $data['quantity']);
-                }
-            } catch (\RuntimeException $e) {
-                $order->update(['status' => 'rejected']);
-
-                return back()->with('error', 'Insufficient balance to place this order.');
-            }
-
-            AuditLog::record($user, 'order.placed', Order::class, $order->id);
-
-            return back()->with('success', 'Limit order placed and is open.');
+            return back()->with('success', 'Order fully matched: '.number_format($filled, 8)." {$market->baseAsset->symbol} filled.");
         }
 
-        $this->fill($order, $market, $fillPrice, $data['quantity'], $feePct, $ledger, $user);
+        if ($data['type'] === 'market') {
+            if ($filled > 0) {
+                return back()->with('success', 'Order partially filled: '.number_format($filled, 8)." {$market->baseAsset->symbol}. No further matching orders were available in the order book.");
+            }
 
-        return back()->with('success', 'Order filled.');
+            $order->update(['status' => 'rejected']);
+
+            return back()->with('error', 'No matching orders are currently available in the order book for this market order. Try a limit order instead, or a smaller quantity.');
+        }
+
+        // Limit order: lock funds for whatever remains unmatched so it can rest on the book.
+        try {
+            if ($data['side'] === 'buy') {
+                $ledger->lockFunds($wallet, $market->quoteAsset, (string) ($remaining * $limitPrice * (1 + $feePct)));
+            } else {
+                $ledger->lockFunds($wallet, $market->baseAsset, (string) $remaining);
+            }
+        } catch (\RuntimeException $e) {
+            // Unwind any partial fill's worth of order state — the fill already settled
+            // through the ledger, so we simply stop here rather than resting the remainder.
+            $order->update(['status' => $filled > 0 ? 'partially_filled' : 'rejected']);
+
+            return back()->with($filled > 0 ? 'success' : 'error', $filled > 0
+                ? 'Order partially filled: '.number_format($filled, 8)." {$market->baseAsset->symbol}. Remaining quantity could not be locked (insufficient balance) and was not placed on the book."
+                : 'Insufficient balance to place this order.');
+        }
+
+        AuditLog::record($user, 'order.placed', Order::class, $order->id);
+
+        return back()->with('success', $filled > 0
+            ? 'Order partially matched ('.number_format($filled, 8)." {$market->baseAsset->symbol}); the remainder is now open on the order book."
+            : 'Limit order placed and is open on the order book.');
     }
 
-    protected function fill(Order $order, MarketPair $market, float $price, float $quantity, float $feePct, LedgerService $ledger, $user): void
+    /** Best available opposite-side resting price, used as a worst-case reference for market order balance checks. */
+    protected function bestOppositePrice(MarketPair $market, string $side): ?float
     {
-        $wallet = $order->walletAccount;
-        $house = House::wallet(WalletAccount::TYPE_TRADING);
+        $opposite = $side === 'buy' ? 'sell' : 'buy';
+        $order = Order::where('market_pair_id', $market->id)->where('side', $opposite)
+            ->whereIn('status', ['new', 'partially_filled'])->whereNotNull('price')
+            ->orderBy('price', $side === 'buy' ? 'desc' : 'asc')
+            ->first();
 
-        $quoteAmount = $quantity * $price;
-        $fee = $quoteAmount * $feePct;
-
-        if ($order->side === 'buy') {
-            $totalCost = $quoteAmount + $fee;
-            try {
-                $ledger->post(
-                    entries: [
-                        ['wallet_account_id' => $wallet->id, 'asset_id' => $market->quote_asset_id, 'direction' => 'debit', 'amount' => $totalCost],
-                        ['wallet_account_id' => $house->id, 'asset_id' => $market->quote_asset_id, 'direction' => 'credit', 'amount' => $totalCost],
-                        ['wallet_account_id' => $house->id, 'asset_id' => $market->base_asset_id, 'direction' => 'debit', 'amount' => $quantity],
-                        ['wallet_account_id' => $wallet->id, 'asset_id' => $market->base_asset_id, 'direction' => 'credit', 'amount' => $quantity],
-                    ],
-                    referenceType: 'order',
-                    referenceId: $order->id,
-                    description: "Buy {$quantity} {$market->baseAsset->symbol} @ {$price}",
-                    createdBy: $user,
-                );
-            } catch (\RuntimeException $e) {
-                $order->update(['status' => 'rejected']);
-
-                return;
-            }
-        } else {
-            $proceeds = $quoteAmount - $fee;
-            try {
-                $ledger->post(
-                    entries: [
-                        ['wallet_account_id' => $wallet->id, 'asset_id' => $market->base_asset_id, 'direction' => 'debit', 'amount' => $quantity],
-                        ['wallet_account_id' => $house->id, 'asset_id' => $market->base_asset_id, 'direction' => 'credit', 'amount' => $quantity],
-                        ['wallet_account_id' => $house->id, 'asset_id' => $market->quote_asset_id, 'direction' => 'debit', 'amount' => $proceeds],
-                        ['wallet_account_id' => $wallet->id, 'asset_id' => $market->quote_asset_id, 'direction' => 'credit', 'amount' => $proceeds],
-                    ],
-                    referenceType: 'order',
-                    referenceId: $order->id,
-                    description: "Sell {$quantity} {$market->baseAsset->symbol} @ {$price}",
-                    createdBy: $user,
-                );
-            } catch (\RuntimeException $e) {
-                $order->update(['status' => 'rejected']);
-
-                return;
-            }
-        }
-
-        Trade::create([
-            'order_id' => $order->id,
-            'price' => $price,
-            'quantity' => $quantity,
-            'fee' => $fee,
-        ]);
-
-        $order->update(['filled_quantity' => $quantity, 'status' => 'filled']);
-
-        AuditLog::record($user, 'order.filled', Order::class, $order->id);
+        return $order ? (float) $order->price : null;
     }
 
     public function cancel(Order $order, LedgerService $ledger)

@@ -29,7 +29,9 @@ class DashboardController extends Controller
             'p2p_disputes' => P2PAppeal::where('status', 'open')->count(),
             'active_bots' => AiBotAllocation::where('status', 'active')->count(),
             'active_mining' => MiningContract::where('status', 'active')->count(),
-            'trading_volume' => Trade::sum(DB::raw('price * quantity')),
+            // Each matched trade posts two Trade rows (one per side of the match), so halve
+            // the sum to report genuine traded volume rather than double-counting it.
+            'trading_volume' => Trade::sum(DB::raw('price * quantity')) / 2,
             'revenue_fees' => Trade::sum('fee'),
             'support_open' => SupportTicket::whereIn('status', ['open', 'pending'])->count(),
             'emails_sent' => EmailLog::count(),
