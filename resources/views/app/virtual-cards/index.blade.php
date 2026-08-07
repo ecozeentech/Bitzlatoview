@@ -36,7 +36,7 @@
         @foreach ($cards as $card)
             <div class="glass-card p-5" x-data="{ revealed: false, number: '', cvv: '' }">
                 <div class="rounded-xl bg-gradient-to-br from-brand/30 via-surface-2 to-purple/20 p-5">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
                         <p class="text-xs text-text-muted">{{ $card->nickname ?? 'Bitzlatoview Card' }}</p>
                         <span class="pill-danger">Not real / not spendable</span>
                     </div>
@@ -81,7 +81,8 @@
 
                 @if ($card->status === 'active')
                     <p class="mt-3 text-xs text-text-muted">Sample transaction history shown below for illustration. Real point-of-sale transactions are coming soon once a card-issuing provider is connected.</p>
-                    <table class="data-table mt-1 text-xs">
+                    <div class="overflow-x-auto">
+                        <table class="data-table mt-1 text-xs">
                         <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Status</th></tr></thead>
                         <tbody>
                             @forelse ($card->transactions as $t)
@@ -91,6 +92,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                    </div>
                 @endif
             </div>
         @endforeach

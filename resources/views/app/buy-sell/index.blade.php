@@ -33,7 +33,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Recent Buy/Sell History</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Date</th><th>From</th><th>To</th><th>Rate</th><th>Fee</th></tr></thead>
             <tbody>
                 @forelse ($history as $h)
@@ -49,6 +50,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

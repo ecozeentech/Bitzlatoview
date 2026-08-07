@@ -15,7 +15,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Referred Users ({{ $referrals->count() }})</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>User</th><th>Joined</th><th>KYC</th></tr></thead>
             <tbody>
                 @forelse ($referrals as $r)
@@ -29,6 +30,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

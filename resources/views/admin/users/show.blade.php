@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="text-2xl font-bold">{{ $user->name }}</h1>
             <p class="text-sm text-text-muted">{{ $user->email }} · {{ $user->country }} · Joined {{ $user->created_at->format('M d, Y') }}</p>
@@ -36,7 +36,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Wallet Balances (read-only)</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Wallet</th><th>Asset</th><th>Available</th><th>Locked</th></tr></thead>
             <tbody>
                 @foreach ($user->walletAccounts as $wallet)
@@ -53,11 +54,13 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Recent Ledger Entries</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Date</th><th>Asset</th><th>Direction</th><th>Amount</th><th>Balance After</th></tr></thead>
             <tbody>
                 @forelse ($ledgerEntries as $e)
@@ -73,6 +76,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5">

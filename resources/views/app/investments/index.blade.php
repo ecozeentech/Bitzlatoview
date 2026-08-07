@@ -22,7 +22,8 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">My Subscriptions</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Product</th><th>Amount</th><th>Rewards Earned</th><th>Unlock</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 @forelse ($subscriptions as $s)
@@ -43,6 +44,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

@@ -32,7 +32,8 @@
 
     <div class="glass-card p-6">
         <h2 class="mb-3 text-lg font-medium">Active Sessions</h2>
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Device</th><th>IP</th><th>Location</th><th>Last Seen</th></tr></thead>
             <tbody>
                 @forelse ($sessions as $s)
@@ -47,6 +48,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

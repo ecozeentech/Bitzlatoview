@@ -6,7 +6,7 @@
     <div class="risk-banner">Stocks and forex remain in paper-trading mode platform-wide — no real securities or leveraged FX trades occur, and no broker-dealer/RFED registration is in place. Live broker adapters and a licensed market data feed would be required before removing this disclosure. Update prices manually below, via CSV import, or wire a licensed vendor API (e.g. Alpha Vantage, Twelve Data) using these same fields.</div>
 
     <div class="glass-card p-5 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="font-semibold">Stocks</h2>
             <div class="flex gap-2">
                 <form method="POST" action="{{ route('admin.stocks.import') }}" enctype="multipart/form-data" class="flex items-center gap-2">
@@ -29,7 +29,8 @@
             <button class="btn-brand text-xs md:col-span-6 w-fit">Create</button>
         </form>
 
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 @foreach ($stocks as $s)
@@ -61,10 +62,11 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="font-semibold">Forex Pairs</h2>
             <button type="button" @click="addForex = !addForex" class="btn-brand text-xs">+ Add Pair</button>
         </div>
@@ -80,7 +82,8 @@
             <button class="btn-brand text-xs md:col-span-6 w-fit">Create</button>
         </form>
 
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Pair</th><th>Bid</th><th>Ask</th><th>Spread</th><th>Max Lev.</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 @foreach ($forexPairs as $p)
@@ -112,10 +115,11 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="glass-card p-5 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="font-semibold">Futures Markets</h2>
             <button type="button" @click="addFutures = !addFutures" class="btn-brand text-xs">+ Add Market</button>
         </div>
@@ -134,7 +138,8 @@
             <button class="btn-brand text-xs">Create</button>
         </form>
 
-        <table class="data-table">
+        <div class="overflow-x-auto">
+            <table class="data-table">
             <thead><tr><th>Symbol</th><th>Mark Price</th><th>Max Leverage</th><th>Maint. Margin</th><th>Funding Rate</th><th></th></tr></thead>
             <tbody>
                 @foreach ($futuresMarkets as $m)
@@ -163,6 +168,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
         <p class="text-xs text-text-muted">Mark price is synced automatically from live crypto prices (see <code>market:sync-prices</code>) via the underlying asset.</p>
     </div>
 </div>
