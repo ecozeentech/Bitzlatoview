@@ -21,7 +21,20 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-2 font-semibold">Documents</h2>
-        <p class="text-sm text-text-muted">Government ID, proof of address and selfie are placeholders in this simulation build (no live document viewer).</p>
+        <div class="flex flex-wrap gap-3 text-sm">
+            @if ($submission->government_id_path)
+                <a href="{{ route('admin.kyc.document', [$submission, 'government_id_path']) }}" target="_blank" class="text-brand hover:underline">View government ID</a>
+            @endif
+            @if ($submission->proof_of_address_path)
+                <a href="{{ route('admin.kyc.document', [$submission, 'proof_of_address_path']) }}" target="_blank" class="text-brand hover:underline">View proof of address</a>
+            @endif
+            @if ($submission->selfie_path)
+                <a href="{{ route('admin.kyc.document', [$submission, 'selfie_path']) }}" target="_blank" class="text-brand hover:underline">View selfie</a>
+            @endif
+        </div>
+        @if (! $submission->government_id_path)
+            <p class="text-sm text-text-muted">No documents on file for this submission.</p>
+        @endif
     </div>
 
     @if (in_array($submission->status, ['submitted', 'under_review', 'more_info_required']))

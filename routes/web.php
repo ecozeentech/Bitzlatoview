@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\Mt5Controller as AdminMt5Controller;
 use App\Http\Controllers\Admin\NftController as AdminNftController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\P2PController as AdminP2PController;
+use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Admin\RiskController as AdminRiskController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
@@ -320,6 +321,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
 
     Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/{submission}', [AdminKycController::class, 'show'])->name('kyc.show');
+    Route::get('/kyc/{submission}/document/{field}', [AdminKycController::class, 'document'])->name('kyc.document');
     Route::post('/kyc/{submission}/approve', [AdminKycController::class, 'approve'])->name('kyc.approve');
     Route::post('/kyc/{submission}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
     Route::post('/kyc/{submission}/more-info', [AdminKycController::class, 'moreInfo'])->name('kyc.more-info');
@@ -328,14 +330,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/risk/alerts/{alert}/resolve', [AdminRiskController::class, 'resolveAlert'])->name('risk.alerts.resolve');
     Route::get('/audit-logs', [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
 
+    Route::get('/payment-methods', [AdminPaymentMethodController::class, 'index'])->name('payment-methods.index');
+    Route::post('/payment-methods', [AdminPaymentMethodController::class, 'store'])->name('payment-methods.store');
+    Route::patch('/payment-methods/{paymentMethod}', [AdminPaymentMethodController::class, 'update'])->name('payment-methods.update');
+    Route::post('/payment-methods/{paymentMethod}/toggle', [AdminPaymentMethodController::class, 'toggle'])->name('payment-methods.toggle');
+    Route::delete('/payment-methods/{paymentMethod}', [AdminPaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
     Route::get('/deposits', [AdminDepositController::class, 'index'])->name('deposits.index');
+    Route::get('/deposits/{deposit}/proof', [AdminDepositController::class, 'proof'])->name('deposits.proof');
     Route::post('/deposits/{deposit}/credit', [AdminDepositController::class, 'credit'])->name('deposits.credit');
     Route::post('/deposits/{deposit}/reject', [AdminDepositController::class, 'reject'])->name('deposits.reject');
 
     Route::get('/withdrawals', [AdminDepositController::class, 'withdrawals'])->name('withdrawals.index');
     Route::post('/withdrawals/{withdrawal}/approve', [AdminDepositController::class, 'approveWithdrawal'])->name('withdrawals.approve');
-    Route::post('/withdrawals/{withdrawal}/reject', [AdminDepositController::class, 'rejectWithdrawal'])->name('withdrawals.reject');
     Route::post('/withdrawals/{withdrawal}/complete', [AdminDepositController::class, 'completeWithdrawal'])->name('withdrawals.complete');
+    Route::post('/withdrawals/{withdrawal}/reject', [AdminDepositController::class, 'rejectWithdrawal'])->name('withdrawals.reject');
 
     Route::get('/ledger', [AdminLedgerController::class, 'index'])->name('ledger.index');
 

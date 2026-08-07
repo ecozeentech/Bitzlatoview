@@ -31,4 +31,9 @@ class Deposit extends Model
     {
         return $this->belongsTo(Asset::class);
     }
+
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
 }
