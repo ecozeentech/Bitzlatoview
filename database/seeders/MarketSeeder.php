@@ -7,6 +7,11 @@ use App\Models\MarketPair;
 use App\Models\Quote;
 use Illuminate\Database\Seeder;
 
+/**
+ * Seeds market pairs with a starting reference price. These are overwritten with real,
+ * live prices the first time `php artisan market:sync-prices` runs (see
+ * App\Services\MarketDataService) — treat the values below as a fallback only.
+ */
 class MarketSeeder extends Seeder
 {
     public function run(): void
