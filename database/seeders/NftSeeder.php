@@ -18,7 +18,7 @@ class NftSeeder extends Seeder
 
         foreach ($collections as $collection) {
             $model = NftCollection::updateOrCreate(['slug' => $collection['slug']], $collection + [
-                'description' => 'Simulated NFT collection for demonstration purposes only.',
+                'description' => 'Collection listings settle on Bitzlatoview\'s internal ledger; on-chain settlement requires a smart-contract/marketplace integration.',
             ]);
 
             for ($i = 1; $i <= 6; $i++) {

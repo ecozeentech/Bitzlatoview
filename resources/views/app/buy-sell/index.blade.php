@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-2xl space-y-6">
     <h1 class="text-2xl font-bold">Buy / Sell Crypto</h1>
-    <p class="text-sm text-text-muted">A beginner-friendly way to buy crypto using your USDT balance, or sell back to USDT. Fills instantly at simulated market pricing with a {{ 0.5 }}% fee.</p>
+    <p class="text-sm text-text-muted">A beginner-friendly way to buy crypto using your USDT balance, or sell back to USDT. Fills instantly at live market pricing with a {{ 0.5 }}% fee.</p>
 
     <div class="glass-card p-6" x-data="{ side: 'buy' }">
         <div class="mb-4 flex rounded-lg bg-surface-2 p-1 text-sm">
@@ -26,7 +26,7 @@
                 <label class="label-field" x-text="side === 'buy' ? 'Amount to spend (USDT)' : 'Amount to sell (crypto units)'"></label>
                 <input type="number" step="0.00000001" name="amount" class="input-field" required>
             </div>
-            <div class="risk-banner">Prices and fills are simulated. No real card/bank rails are connected in this build.</div>
+            <div class="risk-banner">Prices track live market rates. Fills settle instantly against your Bitzlatoview balance — fund it first via Deposit.</div>
             <button class="btn-brand w-full" x-text="side === 'buy' ? 'Buy Now' : 'Sell Now'"></button>
         </form>
     </div>

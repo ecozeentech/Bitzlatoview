@@ -25,7 +25,7 @@ class InvestmentSeeder extends Seeder
             InvestmentProduct::updateOrCreate(
                 ['name' => $product['name']],
                 $product + [
-                    'description' => 'Simulated yield product. Rates are illustrative and not guaranteed. Investment involves risk of loss.',
+                    'description' => 'Rates are illustrative and not guaranteed. Investment involves risk of loss.',
                     'status' => 'active',
                 ]
             );

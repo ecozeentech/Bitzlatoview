@@ -29,9 +29,9 @@ class CopyTradingController extends Controller
             'strategy' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        TraderProfile::create($data + ['status' => 'active', 'bio' => 'Simulated performance for demonstration purposes.']);
+        TraderProfile::create($data + ['status' => 'active', 'bio' => 'Performance figures are disclosed estimates pending independent verification of a real trading track record.']);
 
-        return back()->with('success', 'Demo trader created.');
+        return back()->with('success', 'Trader profile created.');
     }
 
     public function update(Request $request, TraderProfile $trader)

@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-5xl px-4 py-12 lg:px-8">
     <h1 class="text-3xl font-bold">Crypto News</h1>
-    <p class="mt-2 text-text-muted">Simulated market news for demonstration purposes — not financial advice.</p>
+    <p class="mt-2 text-text-muted">Market commentary — not financial advice.</p>
 
     <div class="mt-8 space-y-4">
         @foreach ($articles as $article)

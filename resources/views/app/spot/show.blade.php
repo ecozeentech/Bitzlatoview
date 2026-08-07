@@ -86,10 +86,28 @@
             </form>
         </div>
 
-        <div class="glass-card p-5 text-sm text-text-muted">
-            <h3 class="mb-3 font-semibold text-text-main">Order Book (simulated)</h3>
-            <p>A full depth chart / order book is a UI placeholder in this build. Market orders fill instantly against simulated internal liquidity; limit orders fill immediately if the limit crosses the current price, otherwise they remain open until cancelled.</p>
-            <p class="mt-3 risk-banner">Spot trading involves risk of loss. Prices in this build are simulated.</p>
+        <div class="glass-card p-5 text-sm">
+            <h3 class="mb-3 font-semibold text-text-main">Order Book</h3>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                    <p class="mb-1 font-semibold price-up">Bids</p>
+                    @forelse ($bids as $bid)
+                        <div class="flex justify-between py-0.5"><span class="font-numeric">{{ number_format($bid->price, 4) }}</span><span class="font-numeric text-text-muted">{{ number_format($bid->quantity - $bid->filled_quantity, 4) }}</span></div>
+                    @empty
+                        <p class="text-text-muted">No open bids.</p>
+                    @endforelse
+                </div>
+                <div>
+                    <p class="mb-1 font-semibold price-down">Asks</p>
+                    @forelse ($asks as $ask)
+                        <div class="flex justify-between py-0.5"><span class="font-numeric">{{ number_format($ask->price, 4) }}</span><span class="font-numeric text-text-muted">{{ number_format($ask->quantity - $ask->filled_quantity, 4) }}</span></div>
+                    @empty
+                        <p class="text-text-muted">No open asks.</p>
+                    @endforelse
+                </div>
+            </div>
+            <p class="mt-3 text-text-muted">Orders match directly against other users' resting orders on this order book (price-time priority). If nobody is on the other side, a market order may fill only partially — or not at all — and a limit order simply waits on the book until it is matched or cancelled.</p>
+            <p class="mt-3 risk-banner">Spot trading involves real risk of loss, including the possibility of losing your full order value. Execution depends entirely on the depth of this order book.</p>
         </div>
     </div>
 

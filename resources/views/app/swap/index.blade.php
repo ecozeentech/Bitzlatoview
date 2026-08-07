@@ -60,7 +60,7 @@
                 <div class="mt-1 flex justify-between font-semibold"><span>You receive ≈</span><span class="font-numeric text-brand" x-text="quote ? quote.net.toFixed(8) : ''"></span></div>
             </div>
 
-            <div class="risk-banner">Swap rates are simulated for this build and may not reflect real market conditions.</div>
+            <div class="risk-banner">Swap rates track live market prices but settle internally on Bitzlatoview's ledger, not on-chain or against external exchange liquidity.</div>
 
             <button class="btn-brand w-full">Confirm Swap</button>
         </form>

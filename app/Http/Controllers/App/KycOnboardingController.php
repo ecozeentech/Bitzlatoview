@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\KycSubmission;
 use App\Models\RiskScore;
+use App\Services\TransactionalMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,7 @@ class KycOnboardingController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -38,17 +39,28 @@ class KycOnboardingController extends Controller
             'trading_experience' => ['required', 'in:beginner,intermediate,advanced,professional'],
             'tax_residency' => ['required', 'string', 'max:100'],
             'tin' => ['nullable', 'string', 'max:64'],
+            'government_id' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'proof_of_address' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'selfie' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
         ]);
 
         $data['is_pep'] = $request->boolean('is_pep');
         $data['is_sanctioned'] = $request->boolean('is_sanctioned');
 
+        // Documents are stored on the private disk — never publicly reachable. Only admin
+        // compliance staff can view them, via App\Http\Controllers\Admin\KycController.
+        $governmentIdPath = $request->file('government_id')->store('kyc-documents/'.$user->id, 'local');
+        $proofOfAddressPath = $request->file('proof_of_address')->store('kyc-documents/'.$user->id, 'local');
+        $selfiePath = $request->file('selfie')->store('kyc-documents/'.$user->id, 'local');
+
+        unset($data['government_id'], $data['proof_of_address'], $data['selfie']);
+
         $submission = KycSubmission::create($data + [
             'user_id' => $user->id,
-            'government_id_path' => 'placeholder/government-id.pdf',
-            'proof_of_address_path' => 'placeholder/proof-of-address.pdf',
-            'selfie_path' => 'placeholder/selfie.jpg',
-            'status' => 'under_review',
+            'government_id_path' => $governmentIdPath,
+            'proof_of_address_path' => $proofOfAddressPath,
+            'selfie_path' => $selfiePath,
+            'status' => 'submitted',
             'submitted_at' => now(),
         ]);
 
@@ -59,19 +71,11 @@ class KycOnboardingController extends Controller
             'factors' => ['pep' => $data['is_pep'], 'sanctioned' => $data['is_sanctioned']],
         ]);
 
-        $user->forceFill(['kyc_status' => 'under_review'])->save();
+        $user->forceFill(['kyc_status' => 'submitted'])->save();
 
-        AuditLog::record($user, 'kyc.submitted', KycSubmission::class, $submission->id, null, ['status' => 'under_review']);
+        AuditLog::record($user, 'kyc.submitted', KycSubmission::class, $submission->id, null, ['status' => 'submitted']);
+        $mailer->send($user, 'kyc_submitted', ['name' => $user->name]);
 
-        // Simulation-mode auto-approval: no sanctions/PEP flags and no linked admin review queue backlog.
-        if (! $data['is_pep'] && ! $data['is_sanctioned']) {
-            $submission->update(['status' => 'approved', 'reviewed_at' => now()]);
-            $user->forceFill(['kyc_status' => 'approved'])->save();
-            AuditLog::record($user, 'kyc.auto_approved', KycSubmission::class, $submission->id);
-
-            return redirect('/app/dashboard')->with('success', 'Identity verification approved. All features are now unlocked (simulation mode).');
-        }
-
-        return redirect('/app/dashboard')->with('success', 'Your verification has been submitted and is under manual compliance review.');
+        return redirect('/app/dashboard')->with('success', 'Your identity verification has been submitted and is queued for review by our compliance team. You will be notified once a decision is made — deposits, withdrawals and higher-risk features stay locked until then.');
     }
 }

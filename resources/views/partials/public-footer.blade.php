@@ -6,7 +6,7 @@
                     <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-background">B</span>
                     Bitzlato<span class="text-brand">view</span>
                 </a>
-                <p class="mt-3 max-w-xs text-sm text-text-muted">One dashboard for digital and global markets — crypto, stocks, forex, futures and NFTs. Currently operating in simulation / paper-trading mode.</p>
+                <p class="mt-3 max-w-xs text-sm text-text-muted">One dashboard for digital and global markets — crypto, stocks, forex, futures and NFTs.</p>
             </div>
             @php
                 $footerCols = [
@@ -29,12 +29,12 @@
         </div>
 
         <div class="mt-10 rounded-xl border border-border bg-surface-2/60 p-4 text-xs leading-relaxed text-text-muted">
-            <strong class="text-text-main">Risk disclosure:</strong> Trading crypto, stocks, forex, futures and derivatives involves significant risk and may not be suitable for all investors. Past performance does not guarantee future results. Bitzlatoview does not promise or guarantee any returns. This platform currently runs in simulation / paper-trading mode until licensed custody, broker, card-issuing and KYC/AML providers are connected. Nothing on this site is tax, legal, or investment advice. The "CFA"-style analyst packages offered here use verified-only credentials and are not affiliated with or endorsed by CFA Institute unless explicitly stated.
+            <strong class="text-text-main">Risk disclosure:</strong> Trading crypto, stocks, forex, futures and derivatives involves significant risk and may not be suitable for all investors. Past performance does not guarantee future results. Bitzlatoview does not promise or guarantee any returns. Stock and forex trading, and virtual cards, remain in a disclosed paper/non-live state until licensed broker, market-data, and card-issuing providers are connected. Nothing on this site is tax, legal, or investment advice. The "CFA"-style analyst packages offered here use verified-only credentials and are not affiliated with or endorsed by CFA Institute unless explicitly stated.
         </div>
 
         <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 text-xs text-text-muted md:flex-row">
             <p>&copy; {{ date('Y') }} Bitzlatoview. All rights reserved.</p>
-            <p>Built for simulation &amp; educational purposes. Not currently a licensed money transmitter, broker-dealer, or exchange.</p>
+            <p>Bitzlatoview is not currently licensed as a money transmitter, broker-dealer, or exchange in every jurisdiction unless explicitly stated for that region. Availability of certain features may vary by location.</p>
         </div>
     </div>
 </footer>

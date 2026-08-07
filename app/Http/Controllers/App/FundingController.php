@@ -7,11 +7,12 @@ use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\Deposit;
 use App\Models\Network;
+use App\Models\PaymentMethod;
 use App\Models\WalletAccount;
 use App\Models\Withdrawal;
 use App\Models\WithdrawalAddress;
 use App\Services\LedgerService;
-use App\Services\PricingService;
+use App\Services\TransactionalMailService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,66 +20,55 @@ use Illuminate\Support\Str;
 
 class FundingController extends Controller
 {
-    /** Withdrawals above this USD-equivalent notional require manual admin review. */
-    protected const AUTO_APPROVE_THRESHOLD = 500;
-
     public function deposit(Request $request)
     {
-        $user = Auth::user();
-
         return view('app.funding.deposit', [
             'assets' => Asset::where('is_active', true)->orderBy('symbol')->get(),
-            'networks' => Network::where('is_active', true)->get(),
+            'paymentMethods' => PaymentMethod::where('is_active', true)->orderBy('sort_order')->get(),
             'selectedWallet' => $request->query('wallet', 'primary'),
-            'depositAddress' => 'bzv-sim-'.Str::lower(Str::random(30)),
         ]);
     }
 
-    public function storeDeposit(Request $request, LedgerService $ledger)
+    public function storeDeposit(Request $request)
     {
         $user = Auth::user();
 
         $data = $request->validate([
             'wallet_type' => ['required', 'in:primary,trading,investment'],
             'asset_id' => ['required', 'exists:assets,id'],
-            'network_id' => ['nullable', 'exists:networks,id'],
+            'payment_method_id' => ['required', 'exists:payment_methods,id'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'note' => ['nullable', 'string', 'max:500'],
+            'proof_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
+
+        $method = PaymentMethod::where('is_active', true)->findOrFail($data['payment_method_id']);
+
+        if ($data['amount'] < $method->min_amount || ($method->max_amount && $data['amount'] > $method->max_amount)) {
+            return back()->withInput()->with('error', "This payment method accepts amounts between {$method->min_amount} and ".($method->max_amount ?? '∞')." {$method->currency}.");
+        }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => $data['wallet_type']]);
         $asset = Asset::findOrFail($data['asset_id']);
-        $house = House::wallet(WalletAccount::TYPE_PRIMARY);
+
+        $proofPath = $request->file('proof_file')->store('deposit-proofs', 'local');
+        $referenceCode = 'BZV-'.strtoupper(Str::random(8));
 
         $deposit = Deposit::create([
             'user_id' => $user->id,
             'wallet_account_id' => $wallet->id,
             'asset_id' => $asset->id,
-            'network_id' => $data['network_id'] ?? null,
+            'payment_method_id' => $method->id,
+            'reference_code' => $referenceCode,
+            'proof_file_path' => $proofPath,
             'amount' => $data['amount'],
-            'address' => 'bzv-sim-'.Str::lower(Str::random(30)),
-            'tx_hash' => Str::lower(Str::random(64)),
             'status' => 'pending',
             'user_note' => $data['note'] ?? null,
         ]);
 
-        // Simulation-mode: instantly "confirm" the deposit and post the ledger credit.
-        $ledger->post(
-            entries: [
-                ['wallet_account_id' => $house->id, 'asset_id' => $asset->id, 'direction' => 'debit', 'amount' => $data['amount']],
-                ['wallet_account_id' => $wallet->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $data['amount']],
-            ],
-            referenceType: 'deposit',
-            referenceId: $deposit->id,
-            description: "Simulated deposit of {$data['amount']} {$asset->symbol}",
-            createdBy: $user,
-        );
+        AuditLog::record($user, 'deposit.requested', Deposit::class, $deposit->id);
 
-        $deposit->update(['status' => 'credited', 'credited_at' => now()]);
-
-        AuditLog::record($user, 'deposit.credited', Deposit::class, $deposit->id);
-
-        return redirect('/app/wallet/'.$data['wallet_type'])->with('success', "Deposit of {$data['amount']} {$asset->symbol} credited (simulated).");
+        return redirect('/app/funding/transactions')->with('success', "Deposit request #{$deposit->id} submitted (reference {$referenceCode}). Our team verifies proof of payment manually and credits your wallet once confirmed — this is not instant.");
     }
 
     public function withdraw(Request $request)
@@ -93,7 +83,7 @@ class FundingController extends Controller
         ]);
     }
 
-    public function storeWithdraw(Request $request, LedgerService $ledger, PricingService $pricing)
+    public function storeWithdraw(Request $request, LedgerService $ledger, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -101,7 +91,9 @@ class FundingController extends Controller
             'wallet_type' => ['required', 'in:primary,trading,investment'],
             'asset_id' => ['required', 'exists:assets,id'],
             'network_id' => ['nullable', 'exists:networks,id'],
+            'payment_method_type' => ['required', 'in:'.implode(',', PaymentMethod::TYPES)],
             'address' => ['required', 'string', 'max:255'],
+            'destination_details' => ['nullable', 'string', 'max:1000'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
@@ -121,6 +113,8 @@ class FundingController extends Controller
             'wallet_account_id' => $wallet->id,
             'asset_id' => $asset->id,
             'network_id' => $data['network_id'] ?? null,
+            'payment_method_type' => $data['payment_method_type'],
+            'destination_details' => $data['destination_details'] ?? null,
             'amount' => $data['amount'],
             'fee' => $fee,
             'address' => $data['address'],
@@ -129,19 +123,19 @@ class FundingController extends Controller
         ]);
 
         AuditLog::record($user, 'withdrawal.requested', Withdrawal::class, $withdrawal->id);
+        $mailer->send($user, 'withdrawal_requested', [
+            'name' => $user->name,
+            'amount' => number_format((float) $data['amount'], 8),
+            'asset' => $asset->symbol,
+        ]);
 
-        $usdEquivalent = $data['amount'] * $pricing->usdPrice($asset);
-        $autoApprove = $usdEquivalent <= self::AUTO_APPROVE_THRESHOLD;
-
-        if ($autoApprove) {
-            $this->completeWithdrawal($withdrawal, $ledger, $user);
-
-            return redirect('/app/funding/transactions')->with('success', 'Withdrawal auto-approved and completed (simulation mode, below review threshold).');
-        }
-
-        return redirect('/app/funding/transactions')->with('success', 'Withdrawal submitted and is pending compliance review because it exceeds the auto-approval threshold.');
+        return redirect('/app/funding/transactions')->with('success', "Withdrawal request #{$withdrawal->id} submitted. Funds are locked in your wallet and will be sent by an administrator after manual verification — every withdrawal requires human review before any money moves.");
     }
 
+    /**
+     * Called by an admin (App\Http\Controllers\Admin\DepositController) after they have
+     * actually sent the funds externally and confirmed the transfer went through.
+     */
     public function completeWithdrawal(Withdrawal $withdrawal, LedgerService $ledger, $approver = null)
     {
         $wallet = $withdrawal->walletAccount;
@@ -194,7 +188,7 @@ class FundingController extends Controller
     {
         $user = Auth::user();
 
-        $deposits = Deposit::where('user_id', $user->id)->with('asset')->latest()->take(25)->get();
+        $deposits = Deposit::where('user_id', $user->id)->with('asset', 'paymentMethod')->latest()->take(25)->get();
         $withdrawals = Withdrawal::where('user_id', $user->id)->with('asset')->latest()->take(25)->get();
 
         return view('app.funding.transactions', compact('deposits', 'withdrawals'));

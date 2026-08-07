@@ -34,8 +34,4 @@
 
         <p class="text-center text-sm text-text-muted">Don't have an account? <a href="{{ route('register') }}" class="text-brand hover:underline">Sign up</a></p>
     </form>
-
-    <div class="mt-6 rounded-lg border border-border bg-surface-2/60 p-3 text-xs text-text-muted">
-        Demo accounts — Admin: <code>admin@bitzlatoview.com</code> / <code>password</code> · User: <code>demo@bitzlatoview.com</code> / <code>password</code>
-    </div>
 </x-guest-layout>

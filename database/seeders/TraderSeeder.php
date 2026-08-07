@@ -20,7 +20,7 @@ class TraderSeeder extends Seeder
         foreach ($traders as $trader) {
             TraderProfile::updateOrCreate(
                 ['display_name' => $trader['display_name']],
-                $trader + ['bio' => 'Simulated performance for demonstration purposes. Past performance does not guarantee future results.', 'status' => 'active']
+                $trader + ['bio' => 'Performance figures are disclosed estimates pending independent verification of a real trading track record. Past performance does not guarantee future results.', 'status' => 'active']
             );
         }
     }

@@ -7,11 +7,10 @@ use App\Models\MarketPair;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Simulated pricing service. Resolves a rough USD value for any seeded asset using the
- * `market_pairs`/`quotes` tables (asset-USDT pairs). Stablecoins and USD are treated as 1:1.
- *
- * This is intentionally simple for the MVP simulation; a real deployment would replace this
- * with a licensed market data provider.
+ * Resolves a USD value for any seeded asset using the `market_pairs`/`quotes` tables, which
+ * are kept fresh with real prices by App\Services\MarketDataService (CoinGecko). Stablecoins
+ * and USD are treated as 1:1. Stocks/forex are not yet fed by a licensed market data vendor
+ * and remain in paper-trading mode — see App\Http\Controllers\App\StockController/ForexController.
  */
 class PricingService
 {

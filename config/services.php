@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'coingecko' => [
+        // Optional: a CoinGecko Pro API key. Without it, the free public endpoint is used,
+        // which is rate-limited and fine for low-traffic/testing use only.
+        'key' => env('COINGECKO_API_KEY'),
+    ],
+
 ];

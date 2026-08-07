@@ -75,7 +75,7 @@ class StockController extends Controller
                 $position->quantity -= $data['quantity'];
             }
         } catch (\RuntimeException $e) {
-            return back()->with('error', 'Insufficient balance for this paper trade.');
+            return back()->with('error', 'Insufficient balance for this trade.');
         }
 
         $position->save();
@@ -91,6 +91,6 @@ class StockController extends Controller
 
         AuditLog::record($user, 'stock_order.filled');
 
-        return back()->with('success', 'Paper trade executed at $'.number_format($instrument->last_price, 2).'.');
+        return back()->with('success', 'Paper trade executed at $'.number_format($instrument->last_price, 2).'. Stock prices are not yet fed by a licensed market data vendor.');
     }
 }

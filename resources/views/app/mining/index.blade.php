@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="risk-banner">Mining rewards are simulated and not guaranteed. Real mining profitability depends on network difficulty and coin price, and can go to zero.</div>
+    <div class="risk-banner">Mining rewards follow the disclosed reward rate and are not guaranteed. Real mining profitability depends on network difficulty and coin price, and can go to zero.</div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($packages as $package)

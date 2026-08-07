@@ -13,6 +13,7 @@ use App\Models\P2POrder;
 use App\Models\P2PPaymentMethod;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
+use App\Services\TransactionalMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -62,7 +63,7 @@ class P2PController extends Controller
         return view('app.p2p.order-show', compact('order'));
     }
 
-    public function createOrder(Request $request, LedgerService $ledger)
+    public function createOrder(Request $request, LedgerService $ledger, TransactionalMailService $mailer)
     {
         $data = $request->validate([
             'ad_id' => ['required', 'exists:p2p_ads,id'],
@@ -110,11 +111,12 @@ class P2PController extends Controller
         $ad->decrement('available_amount', $data['crypto_amount']);
 
         AuditLog::record($user, 'p2p_order.created', P2POrder::class, $order->id);
+        $mailer->send($seller, 'p2p_order_opened', ['name' => $seller->name, 'order_id' => (string) $order->id, 'amount' => number_format((float) $data['crypto_amount'], 8), 'asset' => $ad->asset->symbol]);
 
         return redirect()->route('app.p2p.orders.show', $order)->with('success', 'Order created. Crypto is now held in escrow.');
     }
 
-    public function markPaid(P2POrder $order)
+    public function markPaid(P2POrder $order, TransactionalMailService $mailer)
     {
         $this->authorizeParty($order);
         abort_unless(Auth::id() === $order->buyer_id, 403, 'Only the buyer can mark this order as paid.');
@@ -122,6 +124,7 @@ class P2PController extends Controller
 
         $order->update(['status' => 'paid', 'paid_at' => now()]);
         AuditLog::record(Auth::user(), 'p2p_order.marked_paid', P2POrder::class, $order->id);
+        $mailer->send($order->seller, 'p2p_order_paid', ['name' => $order->seller->name, 'order_id' => (string) $order->id]);
 
         return back()->with('success', 'Marked as paid. Waiting for the seller to confirm and release.');
     }
@@ -187,7 +190,7 @@ class P2PController extends Controller
         return back()->with('success', 'Message sent.');
     }
 
-    public function appeal(Request $request, P2POrder $order)
+    public function appeal(Request $request, P2POrder $order, TransactionalMailService $mailer)
     {
         $this->authorizeParty($order);
 
@@ -204,6 +207,9 @@ class P2PController extends Controller
 
         $order->update(['status' => 'appealed']);
         AuditLog::record(Auth::user(), 'p2p_order.appealed', P2POrder::class, $order->id);
+
+        $counterparty = Auth::id() === $order->buyer_id ? $order->seller : $order->buyer;
+        $mailer->send($counterparty, 'p2p_appeal_opened', ['name' => $counterparty->name, 'order_id' => (string) $order->id]);
 
         return back()->with('success', 'Appeal opened. Our compliance team will review the chat, evidence and notes.');
     }

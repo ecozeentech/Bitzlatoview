@@ -4,7 +4,7 @@
 <div class="mx-auto max-w-7xl px-4 py-12 lg:px-8">
     <div class="mb-8">
         <h1 class="text-3xl font-bold">Top Gainers</h1>
-        <p class="mt-2 text-text-muted">The best 24h performers across crypto, stocks and NFT collections (simulated data).</p>
+        <p class="mt-2 text-text-muted">The best 24h performers across crypto, stocks and NFT collections.</p>
         <div class="mt-4 flex gap-3 text-sm">
             <a href="/markets" class="nav-link">All Markets</a>
             <a href="/markets/top-gainers" class="pill-warning">Top Gainers</a>

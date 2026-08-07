@@ -10,6 +10,8 @@ use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
+use App\Services\PricingService;
+use App\Services\TransactionalMailService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,7 +44,7 @@ class AiBotController extends Controller
         return view('app.ai-bots.show', compact('bot', 'myAllocation'));
     }
 
-    public function allocate(Request $request, AiBot $bot, LedgerService $ledger)
+    public function allocate(Request $request, AiBot $bot, LedgerService $ledger, PricingService $pricing, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -68,18 +70,23 @@ class AiBotController extends Controller
             'unlocks_at' => $bot->lock_days > 0 ? now()->addDays($bot->lock_days) : null,
         ]);
 
+        $trackedSymbol = $bot->supported_assets[0] ?? 'BTC';
+        $trackedAsset = Asset::where('symbol', $trackedSymbol)->first();
+
         AiBotTrade::create([
             'ai_bot_allocation_id' => $allocation->id,
-            'asset_symbol' => $bot->supported_assets[0] ?? 'BTC',
+            'asset_symbol' => $trackedSymbol,
             'side' => 'long',
             'amount' => $data['amount'],
+            'entry_price' => $trackedAsset ? $pricing->usdPrice($trackedAsset) : null,
             'pnl' => 0,
             'executed_at' => now(),
         ]);
 
         AuditLog::record($user, 'ai_bot.allocated', AiBotAllocation::class, $allocation->id);
+        $mailer->send($user, 'bot_started', ['name' => $user->name, 'bot' => $bot->name, 'amount' => number_format((float) $data['amount'], 2)]);
 
-        return back()->with('success', "Allocated \${$data['amount']} to {$bot->name}. AI trading bots are experimental and may lose money.");
+        return back()->with('success', "Allocated \${$data['amount']} to {$bot->name}. AI trading bots are experimental — this strategy runs on Bitzlatoview's internal engine (not a live external exchange) and tracks real market prices for {$trackedSymbol}. You may lose money.");
     }
 
     public function pause(AiBotAllocation $allocation)
@@ -98,7 +105,7 @@ class AiBotController extends Controller
         return back()->with('success', 'Bot allocation resumed.');
     }
 
-    public function stop(AiBotAllocation $allocation, LedgerService $ledger)
+    public function stop(AiBotAllocation $allocation, LedgerService $ledger, PricingService $pricing)
     {
         $this->authorizeOwner($allocation);
 
@@ -110,9 +117,25 @@ class AiBotController extends Controller
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
         $house = House::wallet(WalletAccount::TYPE_INVESTMENT);
         $bot = $allocation->bot;
+        $trade = $allocation->trades()->whereNull('closed_at')->latest()->first();
 
-        $simulatedReturnPct = ($bot->historical_return_pct / 100) * (mt_rand(40, 160) / 100);
-        $pnl = round($allocation->amount * $simulatedReturnPct, 2);
+        // Settle against real market price movement over the allocation's lifetime rather
+        // than a random number. Exposure scales with the bot's disclosed risk score, capped
+        // so a loss can never exceed the amount actually allocated (no leverage/debt here).
+        $pnl = 0.0;
+        $exitPrice = null;
+
+        if ($trade && $trade->entry_price > 0) {
+            $trackedAsset = Asset::where('symbol', $trade->asset_symbol)->first();
+            $exitPrice = $trackedAsset ? $pricing->usdPrice($trackedAsset) : null;
+
+            if ($exitPrice) {
+                $priceChangePct = ($exitPrice - $trade->entry_price) / $trade->entry_price;
+                $exposure = max($bot->risk_score, 1) / 50; // risk_score 50 => 1x exposure to the tracked asset
+                $pnl = round($allocation->amount * $priceChangePct * $exposure, 2);
+                $pnl = max($pnl, -1 * (float) $allocation->amount);
+            }
+        }
 
         $ledger->unlockFunds($wallet, $usdt, (string) $allocation->amount);
 
@@ -124,7 +147,7 @@ class AiBotController extends Controller
                 ],
                 referenceType: 'ai_bot_pnl',
                 referenceId: $allocation->id,
-                description: 'Simulated AI bot gain on stop',
+                description: 'AI bot gain settled on stop (based on real market price movement)',
             );
         } elseif ($pnl < 0) {
             $loss = min(abs($pnl), $allocation->amount);
@@ -135,11 +158,12 @@ class AiBotController extends Controller
                 ],
                 referenceType: 'ai_bot_pnl',
                 referenceId: $allocation->id,
-                description: 'Simulated AI bot loss on stop',
+                description: 'AI bot loss settled on stop (based on real market price movement)',
             );
             $pnl = -$loss;
         }
 
+        $trade?->update(['exit_price' => $exitPrice, 'pnl' => $pnl, 'closed_at' => now()]);
         $allocation->update(['status' => 'stopped', 'pnl' => $pnl, 'stopped_at' => now()]);
 
         AuditLog::record(Auth::user(), 'ai_bot.stopped', AiBotAllocation::class, $allocation->id);

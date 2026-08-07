@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Futures Trading</h1>
-    <div class="risk-banner">Futures trading is extremely high risk and can result in losses exceeding your deposit. Simulated / paper mode only. Requires KYC and a separate futures risk agreement in a production deployment.</div>
+    <div class="risk-banner">Futures trading is extremely high risk and can result in losses exceeding your deposit. Positions settle on Bitzlatoview's internal engine against real crypto market prices, not a live external exchange. Requires KYC and a separate futures risk agreement.</div>
 
     <div class="glass-card overflow-x-auto">
         <table class="data-table">

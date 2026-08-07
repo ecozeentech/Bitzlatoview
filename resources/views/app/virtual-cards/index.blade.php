@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Virtual Cards</h1>
-    <div class="risk-banner">Cards in this build are simulated. A production deployment must use a licensed issuing provider/bank-partner stack (e.g. Stripe Issuing, Marqeta, Lithic) — cards are issued by bank partners under Visa/Mastercard licenses.</div>
+    <div class="risk-banner"><strong class="text-danger">Not a real, spendable payment card yet.</strong> No licensed card-issuing provider is connected. Real cards must be issued by a regulated bank partner under a Visa/Mastercard license (e.g. via Stripe Issuing, Marqeta or Lithic) — this section will only produce usable cards once that integration is complete.</div>
 
     @if (auth()->user()->kyc_status !== 'approved')
         <div class="glass-card p-5 text-sm text-text-muted">Card creation requires an approved KYC status. <a href="{{ url('/app/settings/kyc') }}" class="text-brand hover:underline">Complete verification</a>.</div>
@@ -24,7 +24,10 @@
         @foreach ($cards as $card)
             <div class="glass-card p-5" x-data="{ revealed: false, number: '', cvv: '' }">
                 <div class="rounded-xl bg-gradient-to-br from-brand/30 via-surface-2 to-purple/20 p-5">
-                    <p class="text-xs text-text-muted">{{ $card->nickname ?? 'Bitzlatoview Card' }}</p>
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-text-muted">{{ $card->nickname ?? 'Bitzlatoview Card' }}</p>
+                        <span class="pill-danger">Not real / not spendable</span>
+                    </div>
                     <p class="mt-4 font-numeric text-lg tracking-wider" x-text="revealed ? number : '{{ $card->masked_number }}'"></p>
                     <div class="mt-3 flex justify-between text-xs">
                         <span>{{ $card->cardholder_name }}</span>

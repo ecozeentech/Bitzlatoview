@@ -9,7 +9,7 @@
             <a href="{{ url('/app/settings/wallet-connect') }}" class="btn-brand text-sm">Connect Wallet</a>
         </div>
     </div>
-    <div class="risk-banner">NFTs are speculative and illiquid assets. This section uses mock data only. No real on-chain trading until contracts/providers are connected.</div>
+    <div class="risk-banner">NFTs are speculative and illiquid assets. Trades here settle on Bitzlatoview's internal ledger — no real on-chain trading until smart contracts/providers are connected.</div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($collections as $c)

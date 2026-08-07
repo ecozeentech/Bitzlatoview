@@ -29,4 +29,14 @@ class HomeController extends Controller
             'collections' => $collections,
         ]);
     }
+
+    /**
+     * Public "/referrals" link: send logged-in users to their referral dashboard,
+     * guests to registration. Implemented as a controller method (not a route closure)
+     * so that `php artisan route:cache` works in production.
+     */
+    public function referralRedirect()
+    {
+        return auth()->check() ? redirect('/app/referrals') : redirect()->route('register');
+    }
 }

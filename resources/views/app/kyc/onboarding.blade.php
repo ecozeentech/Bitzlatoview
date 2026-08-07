@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-3xl">
     <h1 class="text-2xl font-bold">Identity Verification (KYC)</h1>
-    <p class="mt-2 text-sm text-text-muted">Bitzlatoview requires identity verification before unlocking withdrawals, P2P merchant tools, virtual cards, and futures/stocks/forex trading. This build runs in simulation mode — no real documents are uploaded to a live verification vendor yet.</p>
+    <p class="mt-2 text-sm text-text-muted">Bitzlatoview requires identity verification before unlocking withdrawals, P2P merchant tools, virtual cards, and futures/stocks/forex trading. Your documents are reviewed manually by our compliance team before approval — this is not instant.</p>
 
     @if ($submission)
         <div class="risk-banner mt-6">
@@ -15,7 +15,7 @@
     @endif
 
     @if (! $submission || in_array($submission->status, ['rejected', 'more_info_required']))
-    <form method="POST" action="{{ route('kyc-onboarding.store') }}" class="mt-6 space-y-5">
+    <form method="POST" action="{{ route('kyc-onboarding.store') }}" enctype="multipart/form-data" class="mt-6 space-y-5">
         @csrf
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
@@ -75,9 +75,19 @@
 
         <div class="glass-card space-y-3 p-4">
             <p class="text-sm font-medium">Government ID, proof of address &amp; selfie</p>
-            <div class="rounded-lg border border-dashed border-border p-6 text-center text-sm text-text-muted">
-                Document upload is a placeholder in this simulation build. A production deployment would connect a licensed KYC/liveness provider here.
+            <div>
+                <label class="label-field">Government-issued ID (front, matches type selected above)</label>
+                <input type="file" name="government_id" accept="image/*,.pdf" class="input-field" required>
             </div>
+            <div>
+                <label class="label-field">Proof of address (utility bill or bank statement, last 3 months)</label>
+                <input type="file" name="proof_of_address" accept="image/*,.pdf" class="input-field" required>
+            </div>
+            <div>
+                <label class="label-field">Selfie holding your ID</label>
+                <input type="file" name="selfie" accept="image/*" class="input-field" required>
+            </div>
+            <p class="text-xs text-text-muted">Documents are stored securely and are only ever viewed by authorized compliance staff for verification purposes.</p>
         </div>
 
         <div class="space-y-2">

@@ -1,6 +1,6 @@
 <x-guest-layout>
     <h1 class="mb-1 text-xl font-bold">Create your Bitzlatoview account</h1>
-    <p class="mb-6 text-sm text-text-muted">Trade crypto, stocks, forex, futures and NFTs — all in simulation / paper-trading mode.</p>
+    <p class="mb-6 text-sm text-text-muted">Trade crypto, stocks, forex, futures and NFTs from one dashboard.</p>
 
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf

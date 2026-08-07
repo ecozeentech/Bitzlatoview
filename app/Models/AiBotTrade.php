@@ -9,6 +9,11 @@ class AiBotTrade extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return ['executed_at' => 'datetime', 'closed_at' => 'datetime'];
+    }
+
     public function allocation(): BelongsTo
     {
         return $this->belongsTo(AiBotAllocation::class, 'ai_bot_allocation_id');

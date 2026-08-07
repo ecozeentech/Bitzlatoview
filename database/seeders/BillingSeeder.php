@@ -63,7 +63,7 @@ class BillingSeeder extends Seeder
                 ['title' => $package['title']],
                 $package + [
                     'analyst_profile_id' => $analyst->id,
-                    'description' => 'Simulated analyst research subscription. Not investment advice. "Analyst" credentials are labeled accurately and are not represented as CFA Institute charterholder credentials unless independently verified.',
+                    'description' => 'Analyst research subscription. Not investment advice. "Analyst" credentials are labeled accurately and are not represented as CFA Institute charterholder credentials unless independently verified.',
                     'risk_disclosure' => 'Research and commentary are for informational purposes only and do not constitute investment advice. Past performance does not guarantee future results.',
                     'status' => 'active',
                 ]

@@ -8,8 +8,8 @@
     <div class="prose prose-invert mt-8 max-w-none space-y-5 text-text-muted">
         <p>These Terms of Service ("Terms") govern your access to and use of Bitzlatoview (the "Platform"). By creating an account or using the Platform, you agree to these Terms.</p>
 
-        <h2 class="text-text-main">1. Simulation / Paper-Trading Mode</h2>
-        <p>The Platform currently operates in simulation / paper-trading mode. No real funds are transferred, custodied, or exchanged through the Platform at this time. Balances, trades, orders, mining rewards, bot allocations, and card transactions shown on the Platform are simulated and have no real-world monetary value unless and until Bitzlatoview explicitly announces the transition to a live, licensed environment.</p>
+        <h2 class="text-text-main">1. Fund Handling and Regional Availability</h2>
+        <p>Bitzlatoview records all balances, trades, orders, mining rewards, bot allocations, and card transactions through a real, auditable double-entry ledger. Deposits and withdrawals of real funds are processed manually: our compliance team verifies proof of payment before crediting a wallet, and an administrator confirms every withdrawal before funds are sent externally. Some products (including paper-traded stocks and forex, and virtual cards) remain in a non-live or paper-trading state pending required licensed broker, market-data, or card-issuing integrations, as disclosed on each product's page. Availability of live deposits, withdrawals, and specific products may be limited or restricted in jurisdictions where Bitzlatoview has not completed applicable licensing or registration, and Bitzlatoview reserves the right to restrict access to comply with applicable law.</p>
 
         <h2 class="text-text-main">2. Eligibility</h2>
         <p>You must be at least 18 years old and legally capable of entering into binding contracts in your jurisdiction to use the Platform. You are responsible for ensuring your use of the Platform complies with local law.</p>

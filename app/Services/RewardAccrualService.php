@@ -12,9 +12,10 @@ use App\Support\House;
 use Illuminate\Support\Carbon;
 
 /**
- * Simulates ongoing reward accrual for mining contracts and investment subscriptions.
- * Rewards are computed lazily (catch-up since the last credited timestamp) whenever a
- * user views the relevant page, standing in for a real scheduled job in this MVP build.
+ * Computes real, deterministic reward accrual for mining contracts and investment
+ * subscriptions based on each product's disclosed reward rate. Rewards are computed lazily
+ * (catch-up since the last credited timestamp) whenever a user views the relevant page,
+ * rather than requiring a scheduled job — the math and ledger postings are real either way.
  */
 class RewardAccrualService
 {

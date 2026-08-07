@@ -8,8 +8,9 @@
             ['Audit Logs', 'admin/audit-logs'],
         ],
         'Funds' => [
-            ['Deposits', 'admin/deposits'],
-            ['Withdrawals', 'admin/withdrawals'],
+            ['Payment Settings', 'admin/payment-methods'],
+            ['Deposit Requests', 'admin/deposits'],
+            ['Withdrawal Requests', 'admin/withdrawals'],
             ['Ledger', 'admin/ledger'],
             ['Balance Adjustments', 'admin/adjustments'],
         ],

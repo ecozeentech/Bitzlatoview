@@ -2,7 +2,7 @@
 
 Bitzlatoview is an original, Binance-inspired-but-not-copied multi-asset trading platform built in **PHP / Laravel**. It brings crypto spot trading, P2P, swap, copy trading, AI trading bots, mining, investments, stocks, forex, futures, MetaTrader 5 linking, an NFT marketplace, virtual cards, a tax center, analyst-package billing, a CMS/blog/news system, and a full admin back office into one dashboard.
 
-> **This build runs entirely in simulation / paper-trading mode.** No real money, securities, crypto, or card transactions occur anywhere in this codebase. Every "deposit", "trade", "mining reward", "AI bot P&L" etc. is generated internally and settled through an auditable double-entry ledger against a platform "house" account. See [Compliance & risk posture](#compliance--risk-posture) below before ever considering a production/live-money deployment.
+> **Read this before going live.** Bitzlatoview's ledger, wallets, KYC workflow, manual payment gateway, and P2P/matching engine are real, functioning systems — not mock data. But **accepting real customer deposits and executing real trades is regulated activity** (money transmission, and potentially securities/commodity-pool/investment-adviser activity for copy trading, AI bots, and revenue-sharing products) in essentially every jurisdiction. Do not enable real payment methods or announce the platform as "live" until your company has confirmed the required licenses/registrations with qualified legal counsel for every jurisdiction you intend to operate in. See [Going live: compliance checklist](#going-live-compliance-checklist) below.
 
 ## Tech stack
 
@@ -10,11 +10,14 @@ Bitzlatoview is an original, Binance-inspired-but-not-copied multi-asset trading
 - Blade + Tailwind CSS (dark, gold-accented fintech theme) + Alpine.js for light interactivity
 - SQLite by default for zero-config local development (swap to MySQL/PostgreSQL for production — see below)
 - Laravel Breeze-based authentication (login, registration, password reset, email verification) extended with:
-  - KYC onboarding flow with configurable auto-approval / manual compliance review
+  - KYC onboarding with real document upload, always routed to manual compliance review (no auto-approval)
   - A dependency-free RFC 6238 TOTP implementation for two-factor authentication
 - A custom **double-entry ledger engine** (`App\Services\LedgerService`) that is the *only* code path allowed to mutate wallet balances
-- A **"House" system account** (`App\Support\House`) acting as the ledger counterparty for simulated fills, rewards, and fees
-- Laravel's `Mail` facade (log driver by default) as the email delivery abstraction — swap `MAIL_MAILER` for Resend/SendGrid/Postmark/SMTP
+- A **"House" system account** (`App\Support\House`) acting as the ledger counterparty for fee collection, reward payouts, and internal strategy-engine settlement (AI bots, copy trading, futures/forex)
+- A **real peer-to-peer spot order-matching engine** (`App\Services\SpotMatchingEngine`) that matches orders directly between users, price-time priority, with no phantom liquidity
+- A **live market data service** (`App\Services\MarketDataService`) pulling real crypto prices from CoinGecko
+- A **manual payment gateway**: admin-configured payment methods, user-submitted deposit requests with uploaded proof of payment, and a two-step (approve → send → mark completed) withdrawal review flow — every fund movement is reviewed by a human before the ledger is touched
+- Laravel's `Mail` facade (log driver by default) as the email delivery abstraction, wired to real transactional events (registration, KYC decisions, deposits, withdrawals, P2P, bots, mining, tax reports) via `App\Services\TransactionalMailService` and the admin-editable templates under `/admin/email/templates`
 
 ## Quick start
 
@@ -30,14 +33,14 @@ php artisan serve
 
 Visit `http://127.0.0.1:8000`.
 
-### Demo accounts (all use password `password`)
+### Seeded accounts (password `password`)
 
 | Email | Role | Notes |
 |---|---|---|
 | `admin@bitzlatoview.com` | Admin | Full access to `/admin` |
-| `demo@bitzlatoview.com` | User | KYC approved, seeded with BTC/ETH/USDT balances |
-| `unverified@bitzlatoview.com` | User | KYC not started — used to exercise KYC gating |
-| `merchant1@bitzlatoview.com` / `merchant2@…` / `merchant3@…` | User | Verified P2P merchants with live ads |
+| `testuser@bitzlatoview.com` | User | KYC not started — internal QA account, no seeded balance |
+
+No account is seeded with a free wallet balance. To test deposits end-to-end, add a payment method in `/admin/payment-methods`, then submit a deposit request as a user and approve it as an admin — exactly the real flow a live user would go through.
 
 ## Application structure
 
@@ -46,8 +49,9 @@ Visit `http://127.0.0.1:8000`.
 /login /register ...  Authentication (Breeze) + KYC onboarding + two-factor setup
 /app/...              Authenticated user dashboard: wallets, trading, P2P, copy trading, AI bots,
                        mining, investments, stocks/forex/futures, MT5, NFT, cards, tax, billing, settings
-/admin/...            Admin back office: users, KYC queue, funds/ledger/adjustments, risk & compliance,
-                       trading & market controls, product catalogs, CMS, email center, support desk
+/admin/...            Admin back office: users, KYC queue, payment methods, deposit/withdrawal requests,
+                       ledger/adjustments, risk & compliance, trading & market controls, product catalogs,
+                       CMS, email center, support desk
 ```
 
 Route definitions live in `routes/web.php`; controllers are grouped under `App\Http\Controllers\App` (user app) and `App\Http\Controllers\Admin` (admin). Views mirror the same structure under `resources/views/app` and `resources/views/admin`, extending `resources/views/layouts/{app,admin,public}.blade.php`.
@@ -61,34 +65,86 @@ All balance-changing activity — deposits, withdrawals, transfers, spot/futures
 - `lockFunds()` / `unlockFunds()` move value between a wallet's `available` and `locked` buckets (e.g. an open limit order, a P2P escrow, a locked mining/investment/bot allocation) without creating value.
 - `releaseLockedFunds()` moves *locked* balance from one wallet directly into another wallet's *available* balance (used for P2P escrow release and appeal resolutions), while still posting a fully balanced `LedgerTransaction`.
 - **There is no direct balance-editing code path.** Admin "balance adjustments" (`/admin/adjustments`) require a reason, optional evidence URL, and a second admin's approval (maker/checker) before the ledger is touched — see `App\Http\Controllers\Admin\AdjustmentController`.
-- `App\Support\House` is the platform's own system account, acting as counterparty for anything that isn't naturally balanced between two real users (simulated market fills, reward payouts, fee collection).
+- `App\Support\House` is the platform's own system account, acting as counterparty for anything that isn't naturally balanced between two real users (fee collection, reward payouts, and the internal strategy engine behind AI bots/copy trading/futures/forex, none of which connect to a live external exchange with real capital).
 
 Users have three wallet types (`App\Models\WalletAccount::TYPES`): **Primary** (funding/P2P/cards), **Trading** (spot/futures/forex collateral), and **Investment** (bots, copy trading, mining, earn products). Internal transfers between them go through the same ledger.
 
+## The manual payment gateway (deposits & withdrawals)
+
+Real fund movement is deliberately **manual and human-reviewed** end to end:
+
+1. **Admin configures payment methods** at `/admin/payment-methods` — crypto address + network, bank account details, or CashApp/Venmo/PayPal handles, each with min/max limits and an optional QR code.
+2. **User deposits**: picks a payment method on `/app/funding/deposit`, sends funds off-platform using the published instructions, then submits a deposit request with the amount and an uploaded proof-of-payment file (`App\Http\Controllers\App\FundingController::storeDeposit`). Nothing is credited yet.
+3. **Admin reviews** the request and the uploaded proof at `/admin/deposits`, then either credits the ledger (`Admin\DepositController::credit`) or rejects it with a reason.
+4. **User withdraws**: requests a withdrawal, funds are immediately locked (not debited) in their wallet.
+5. **Admin approves** the request (confirms it's legitimate — no funds move yet), manually sends the money externally, then **marks it completed** (`Admin\DepositController::completeWithdrawal`), which is the only point the ledger actually debits the wallet. Rejecting at any point before completion unlocks the funds back to the user.
+
+Every step is audit-logged (`App\Models\AuditLog`) and triggers a transactional email. Proof-of-payment and KYC document uploads are stored on the **private** filesystem disk and are only ever served through authenticated admin-only routes (`Admin\DepositController::proof`, `Admin\KycController::document`) — never a public URL.
+
+## Real order matching (spot trading)
+
+`App\Services\SpotMatchingEngine` matches incoming orders directly against other users' resting orders in the same market (best price, then time priority — FIFO). There is no synthetic "house" liquidity standing in as a fake counterparty:
+
+- A **limit order** that doesn't immediately cross the book simply rests on it (funds locked) until matched or cancelled.
+- A **market order** fills against whatever resting liquidity exists; if there isn't enough (or any), it partially fills or is rejected — exactly like a real exchange with no market maker connected.
+- Both sides of a match settle through the same ledger transaction, with maker/taker fees routed to the platform's fee-revenue account (`House::wallet('trading')`).
+
+Copy trading, AI bots, and futures/forex still settle against **real, live market prices** (via `MarketDataService`/`PricingService`) but on Bitzlatoview's own internal engine rather than a live connection to an external exchange — this is disclosed on every relevant page.
+
+## Live market data
+
+`App\Services\MarketDataService` pulls real prices from [CoinGecko's public API](https://www.coingecko.com/en/api) for all seeded crypto assets. Run it manually or on a schedule:
+
+```bash
+php artisan market:sync-prices
+```
+
+`routes/console.php` schedules this to run every 5 minutes via Laravel's scheduler — make sure your host runs the standard cron entry:
+
+```
+* * * * * cd /path-to-your-app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Set `COINGECKO_API_KEY` in `.env` if you have a CoinGecko Pro plan (recommended for real traffic — the free public endpoint is rate-limited). **Stocks and forex are not yet fed by a live licensed market data vendor** and remain in disclosed paper-trading mode — see the table below.
+
 ## Compliance & risk posture
 
-This build intentionally implements the guardrails called for by a multi-asset platform, while keeping everything in simulation mode:
-
+- **KYC is always manually reviewed.** `App\Http\Controllers\App\KycOnboardingController` requires real document uploads (government ID, proof of address, selfie) and always routes to the admin KYC queue — there is no auto-approval path.
 - **KYC gates** (`kyc.approved` middleware) protect withdrawals, P2P merchant ads, virtual card issuance, and futures/stocks/forex order placement.
-- **Risk disclosures** are shown on every trading, futures, bots, mining, staking/investment, copy-trading, stock/forex, and P2P surface.
-- **No guaranteed-return language** anywhere in bot/mining/investment copy — all simulated performance is explicitly labeled as such.
-- **Audit logging** (`App\Models\AuditLog::record()`) is called from sensitive user and admin actions (KYC decisions, withdrawals, adjustments, role changes, P2P releases, etc.).
+- **Risk disclosures** are shown on every trading, futures, bots, mining, staking/investment, copy-trading, stock/forex, and P2P surface, and have been reworded (see `/risk-disclosure`, `/terms`) to reflect real trading/fund-handling risk rather than "this is a simulation" language.
+- **No guaranteed-return language** anywhere in bot/mining/investment copy.
+- **Audit logging** (`App\Models\AuditLog::record()`) is called from sensitive user and admin actions (KYC decisions, deposits, withdrawals, adjustments, role changes, P2P releases, order matches, etc.).
 - **Analyst/"CFA" packages** are modeled as `AnalystProfile.credential` + `credential_verified`, defaulting to unverified/generic "Market Analyst" labeling — the CFA designation is never implied unless an admin explicitly marks a profile verified, and that action is intentionally manual and audited.
-- **Virtual cards** never expose a full PAN except through a explicit "reveal" action, and are clearly labeled as simulated pending a real issuing-processor integration.
+- **Virtual cards are explicitly and repeatedly marked as NOT real, spendable cards** (in the UI and in every success message) until a licensed card-issuing provider is connected — do not remove this labeling; presenting a mock card number as a working payment instrument would be deceptive to users.
+- **Transactional emails** (welcome, KYC decisions, deposit/withdrawal updates, P2P, bots, mining, tax reports) are wired to real events via `App\Services\TransactionalMailService` and are logged to `App\Models\EmailLog` for auditability, using admin-editable templates (`/admin/email/templates`).
+
+## Going live: compliance checklist
+
+Before enabling real payment methods or telling users this platform handles real money, confirm with qualified legal/compliance counsel:
+
+1. **Money transmission / e-money licensing** in every jurisdiction where you'll accept deposits or send withdrawals. This is required *before* handling customer funds, not while an application is pending.
+2. **Securities/commodities/investment-adviser analysis** for copy trading, AI bots, and any investment/staking product with a revenue-sharing or profit-participation structure — these can implicate the Howey test / CFTC commodity-pool rules / investment adviser registration depending on how they're structured and marketed.
+3. **Card issuing**: real, spendable cards require a licensed processor/bank-partner stack (Stripe Issuing, Marqeta, Lithic) — this repo only ever produces internal account records.
+4. **Broker/market-data licensing** for stocks and forex before removing their paper-trading label, plus a real broker adapter (Alpaca, Tradier, DriveWealth, MT5 Manager API, etc.).
+5. **KYC/AML program**: a documented compliance program, SAR filing capability, and sanctions/PEP screening beyond the self-attestation collected today.
+6. Once the above are confirmed for your specific structure and jurisdictions, configure real payment methods in `/admin/payment-methods` and proceed deliberately, starting with a small user base.
 
 ## Where to plug in real providers
 
 | Concern | Current implementation | Real integration point |
 |---|---|---|
-| Crypto custody / deposits / withdrawals | Simulated instant "confirmation" in `App\Http\Controllers\App\FundingController` | Wallet/custody provider (Fireblocks, BitGo, etc.) + blockchain node/webhook listeners |
-| KYC/AML | Self-attested form + auto-approve unless PEP/sanctioned flags set, in `App\Http\Controllers\App\KycOnboardingController` | Licensed KYC/liveness vendor (Sumsub, Onfido, Persona, etc.) |
-| Market data | Static seeded `quotes`/`market_pairs` rows, `App\Services\PricingService` | Real-time market data provider / exchange feed |
-| Card issuing | Mock card records in `App\Http\Controllers\App\VirtualCardController` | Stripe Issuing, Marqeta, or Lithic (cards are issued by a bank partner under Visa/Mastercard license) |
-| Stocks/Forex/Futures brokerage | Paper trading against simulated prices | Licensed broker adapter (Alpaca, Tradier, DriveWealth, MT5 bridge, etc.) — see `Admin\ExtendedMarketController` for the paper/live toggle point |
-| MetaTrader 5 | Simulated account + position records, encrypted mock credentials in `App\Http\Controllers\App\Mt5Controller` | Real MT5 Manager API / broker OAuth integration |
+| Crypto/fiat deposits & withdrawals | Manual payment gateway with proof-of-payment upload + admin review (`App\Http\Controllers\App\FundingController`, `Admin\DepositController`) | This is a legitimate manual-settlement design; add automated on-chain monitoring / bank webhook confirmation later if desired, but manual review is a reasonable and compliant starting point |
+| Crypto custody | Ledger-only (no real custody) | Wallet/custody provider (Fireblocks, BitGo, etc.) for real on-chain custody |
+| KYC/AML | Manual document upload + admin review, in `App\Http\Controllers\App\KycOnboardingController` / `Admin\KycController` | Licensed KYC/liveness vendor (Sumsub, Onfido, Persona, etc.) for automated identity/document verification and sanctions screening |
+| Crypto market data | **Live** — CoinGecko public API via `App\Services\MarketDataService` | Already real; consider a paid plan or exchange-direct feed for production-scale traffic |
+| Stock/forex market data | Static seeded prices, paper trading only | Licensed market data vendor (e.g. Polygon.io, Twelve Data) + licensed broker |
+| Card issuing | Internal account records only, explicitly labeled as not real in the UI, in `App\Http\Controllers\App\VirtualCardController` | Stripe Issuing, Marqeta, or Lithic (cards are issued by a bank partner under Visa/Mastercard license) |
+| Stocks/Forex/Futures brokerage | Paper trading; futures settle against real crypto prices on the internal engine | Licensed broker adapter (Alpaca, Tradier, DriveWealth, MT5 bridge, etc.) — see `Admin\ExtendedMarketController` for the paper/live toggle point |
+| MetaTrader 5 | Account records with encrypted credentials; no live broker sync, in `App\Http\Controllers\App\Mt5Controller` | Real MT5 Manager API / broker OAuth integration |
 | WalletConnect / Web3 | `App\Models\ConnectedWallet` stores address/chain only, no signing | wagmi/viem + WalletConnect Cloud project ID on the frontend |
-| Email delivery | Laravel `Mail` facade, `MAIL_MAILER=log` by default | Set `MAIL_MAILER` to `resend`/`sendgrid`/`postmark`/`smtp` in `.env` and configure `config/mail.php` |
+| Email delivery | Laravel `Mail` facade, real transactional triggers, `MAIL_MAILER=log` by default | Set `MAIL_MAILER` to `resend`/`sendgrid`/`postmark`/`smtp` in `.env` and configure `config/mail.php` |
 | Two-factor authentication | Self-contained RFC 6238 TOTP (`App\Services\TotpService`) | Compatible out of the box with Google Authenticator/Authy/1Password — no change needed, but consider WebAuthn for a production hardening pass |
+| AI bots / copy trading execution | Settle against real live crypto prices on Bitzlatoview's internal ledger (no external exchange connection) | A live exchange API connection (e.g. via a licensed broker/exchange relationship) if you want bots to execute on real external liquidity — this is a significant undertaking requiring real capital custody and its own risk controls |
 
 ## Feature flags
 
@@ -119,7 +175,7 @@ DB_USERNAME=postgres
 DB_PASSWORD=secret
 ```
 
-Then `php artisan migrate --seed` (drop the `--seed` in production and load only the reference data seeders you need: `AssetSeeder`, `NetworkSeeder`, `MarketSeeder`, `FeatureFlagSeeder`).
+Then `php artisan migrate --seed` (drop the `--seed` in production and load only the reference data seeders you need: `AssetSeeder`, `NetworkSeeder`, `MarketSeeder`, `FeatureFlagSeeder`). Follow up with `php artisan market:sync-prices` to populate live prices immediately rather than waiting for the first scheduled run.
 
 ## Legal
 

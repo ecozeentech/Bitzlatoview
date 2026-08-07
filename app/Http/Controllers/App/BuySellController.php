@@ -104,6 +104,6 @@ class BuySellController extends Controller
 
         AuditLog::record($user, 'buy_sell.executed');
 
-        return back()->with('success', ucfirst($data['side']).' completed instantly (simulated pricing).');
+        return back()->with('success', ucfirst($data['side']).' completed instantly at live market pricing.');
     }
 }

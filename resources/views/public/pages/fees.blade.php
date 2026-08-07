@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-4xl px-4 py-16 lg:px-8">
     <h1 class="text-3xl font-bold">Fees</h1>
-    <p class="mt-2 text-text-muted">All fees below are illustrative defaults for this simulation build and are configurable by the platform admin per market.</p>
+    <p class="mt-2 text-text-muted">These are the platform's default fee rates and are configurable by the admin per market.</p>
 
     <div class="mt-8 grid gap-6 sm:grid-cols-2">
         <div class="glass-card p-5">

@@ -3,12 +3,12 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">MetaTrader 5 / Meta Trading</h1>
-    <div class="risk-banner">MT5 officially supports forex, stocks, futures, algorithmic and copy trading. Real broker connections require proper licensing. This build stores simulated account data only; credentials are encrypted at rest and never displayed in plain text.</div>
+    <div class="risk-banner"><strong class="text-danger">Not connected to a real broker yet.</strong> MT5 officially supports forex, stocks, futures, algorithmic and copy trading, but a live connection requires a licensed broker's Manager API and proper regulatory approval. Accounts saved here do not sync with any real MT5 server — positions shown are placeholder data only. Credentials are encrypted at rest and never displayed in plain text.</div>
 
     <div class="grid gap-4 lg:grid-cols-3">
-        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">Web Terminal</p><p class="mt-2 text-sm">Placeholder — requires broker/provider licensing</p></div>
-        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">EA Marketplace</p><p class="mt-2 text-sm">Placeholder — MQL5/Expert Advisor listings</p></div>
-        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">VPS</p><p class="mt-2 text-sm">Placeholder — low-latency VPS for EAs</p></div>
+        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">Web Terminal</p><p class="mt-2 text-sm">Coming soon — requires broker/provider licensing</p></div>
+        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">EA Marketplace</p><p class="mt-2 text-sm">Coming soon — MQL5/Expert Advisor listings</p></div>
+        <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">VPS</p><p class="mt-2 text-sm">Coming soon — low-latency VPS for EAs</p></div>
     </div>
 
     <div class="glass-card p-6">
