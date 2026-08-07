@@ -106,10 +106,12 @@ class RewardAccrualService
         $wallet = WalletAccount::firstOrCreate(['user_id' => $sub->user_id, 'type' => WalletAccount::TYPE_INVESTMENT]);
         $house = House::wallet(WalletAccount::TYPE_INVESTMENT);
         $dailyRate = ((float) $product->apy_pct / 100) / 365;
+        $intervalDays = $product->payout_frequency === 'weekly' ? 7 : 1;
+        $periods = intdiv($days, $intervalDays);
 
-        for ($i = 1; $i <= $days; $i++) {
-            $creditedAt = $since->copy()->addDays($i);
-            $amount = round((float) $sub->amount * $dailyRate, 8);
+        for ($i = 1; $i <= $periods; $i++) {
+            $creditedAt = $since->copy()->addDays($i * $intervalDays);
+            $amount = round((float) $sub->amount * $dailyRate * $intervalDays, 8);
             if ($amount <= 0) {
                 continue;
             }
