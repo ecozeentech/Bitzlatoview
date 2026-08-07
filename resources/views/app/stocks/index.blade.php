@@ -5,6 +5,10 @@
     <h1 class="text-2xl font-bold">Stock Trading (Paper Mode)</h1>
     <div class="risk-banner">This is a paper-trading environment. No real securities are bought or sold, and prices are not yet fed by a licensed market data vendor.</div>
 
+    @if ($instruments->isNotEmpty())
+        <x-tradingview-chart :symbol="'NASDAQ:'.$instruments->first()->symbol" :height="380" />
+    @endif
+
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
             <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change</th><th></th></tr></thead>
