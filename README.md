@@ -115,7 +115,10 @@ Set `COINGECKO_API_KEY` in `.env` if you have a CoinGecko Pro plan (recommended 
 - **No guaranteed-return language** anywhere in bot/mining/investment copy.
 - **Audit logging** (`App\Models\AuditLog::record()`) is called from sensitive user and admin actions (KYC decisions, deposits, withdrawals, adjustments, role changes, P2P releases, order matches, etc.).
 - **Analyst/"CFA" packages** are modeled as `AnalystProfile.credential` + `credential_verified`, defaulting to unverified/generic "Market Analyst" labeling — the CFA designation is never implied unless an admin explicitly marks a profile verified, and that action is intentionally manual and audited.
-- **Virtual cards are explicitly and repeatedly marked as NOT real, spendable cards** (in the UI and in every success message) until a licensed card-issuing provider is connected — do not remove this labeling; presenting a mock card number as a working payment instrument would be deceptive to users.
+- **Virtual cards are explicitly and repeatedly marked as NOT real, spendable cards** (in the UI and in every success message) until a licensed card-issuing provider is connected — do not remove this labeling; presenting a mock card number as a working payment instrument would be deceptive to users. Requests now go through an admin approval queue (`/admin/virtual-cards`) rather than activating instantly, and admin-configurable limits/currencies/fees live in `App\Models\CardSetting`.
+- **Stocks and forex remain paper-trading** (`/app/stocks`, `/app/forex`) even though admins can now fully manage instruments/pairs, prices and CSV import (`Admin\StockInstrumentController`, `Admin\ForexPairController`) — do not remove that disclosure without real broker-dealer/RFED registration in place; a platform that lets users "trade" securities or leveraged FX against the house without that registration is exactly the kind of unlicensed brokerage/bucket-shop activity regulators pursue.
+- **MetaTrader 5** (`/app/metatrader-5`) always discloses that no real broker connection exists yet, even though the banner styling is neutral rather than alarming — removing that disclosure while still generating placeholder position data would show users fabricated trading data with no indication it isn't real.
+- **Seeded P2P merchant liquidity is treasury capital, not free user balance.** `P2PSeeder` credits the three demo merchant accounts via the real ledger (reference type `merchant_treasury_funding`) so their listed ads are genuinely backed — this models a company funding its own market-making accounts before going live, not giving an end user free money to withdraw. Regular user accounts are never seeded with a balance; they must go through the real deposit flow.
 - **Transactional emails** (welcome, KYC decisions, deposit/withdrawal updates, P2P, bots, mining, tax reports) are wired to real events via `App\Services\TransactionalMailService` and are logged to `App\Models\EmailLog` for auditability, using admin-editable templates (`/admin/email/templates`).
 
 ## Going live: compliance checklist
@@ -137,18 +140,41 @@ Before enabling real payment methods or telling users this platform handles real
 | Crypto custody | Ledger-only (no real custody) | Wallet/custody provider (Fireblocks, BitGo, etc.) for real on-chain custody |
 | KYC/AML | Manual document upload + admin review, in `App\Http\Controllers\App\KycOnboardingController` / `Admin\KycController` | Licensed KYC/liveness vendor (Sumsub, Onfido, Persona, etc.) for automated identity/document verification and sanctions screening |
 | Crypto market data | **Live** — CoinGecko public API via `App\Services\MarketDataService` | Already real; consider a paid plan or exchange-direct feed for production-scale traffic |
-| Stock/forex market data | Static seeded prices, paper trading only | Licensed market data vendor (e.g. Polygon.io, Twelve Data) + licensed broker |
-| Card issuing | Internal account records only, explicitly labeled as not real in the UI, in `App\Http\Controllers\App\VirtualCardController` | Stripe Issuing, Marqeta, or Lithic (cards are issued by a bank partner under Visa/Mastercard license) |
-| Stocks/Forex/Futures brokerage | Paper trading; futures settle against real crypto prices on the internal engine | Licensed broker adapter (Alpaca, Tradier, DriveWealth, MT5 bridge, etc.) — see `Admin\ExtendedMarketController` for the paper/live toggle point |
+| Stock/forex market data | Admin-managed prices (manual entry or CSV import via `Admin\StockInstrumentController` / `Admin\ForexPairController`), paper trading only | Licensed market data vendor (e.g. Polygon.io, Twelve Data, Alpha Vantage) + licensed broker |
+| Card issuing | Internal account records only, explicitly labeled as not real in the UI, with an admin approval queue in `App\Http\Controllers\App\VirtualCardController` / `Admin\VirtualCardController` | Stripe Issuing, Marqeta, or Lithic (cards are issued by a bank partner under Visa/Mastercard license) |
+| Stocks/Forex/Futures brokerage | Paper trading; futures settle against real crypto prices on the internal engine; admin has full CRUD over instruments/pairs/markets, fees and leverage caps | Licensed broker adapter (Alpaca, Tradier, DriveWealth, MT5 bridge, etc.) — see `Admin\ExtendedMarketController`, `Admin\StockInstrumentController`, `Admin\ForexPairController`, `Admin\FuturesMarketController` for the paper/live toggle point |
 | MetaTrader 5 | Account records with encrypted credentials; no live broker sync, in `App\Http\Controllers\App\Mt5Controller` | Real MT5 Manager API / broker OAuth integration |
-| WalletConnect / Web3 | `App\Models\ConnectedWallet` stores address/chain only, no signing | wagmi/viem + WalletConnect Cloud project ID on the frontend |
+| WalletConnect / Web3 | Real EIP-1193 `window.ethereum` connection for browser-extension wallets (MetaMask, Coinbase Wallet, Trust Wallet, Rainbow); WalletConnect QR/Ledger require a WalletConnect Cloud project ID and are clearly labeled as pending configuration. `App\Models\ConnectedWallet` stores address/chain only, no signing | A WalletConnect Cloud project ID + `@walletconnect/*` SDK for QR/hardware-wallet pairing |
+| TradingView charts | Live via the free public TradingView widget (`resources/views/components/tradingview-chart.blade.php`) on spot/futures/stocks/forex pages — real market data from TradingView's own feed, independent of our backend | Already real; no change needed unless you want a custom data feed |
+| Branding | Admin-uploadable logo/favicon (`/admin/settings/branding`, `App\Models\BrandingSetting`), served from `storage/app/public/branding` via the `public/storage` symlink | Already real; no change needed |
 | Email delivery | Laravel `Mail` facade, real transactional triggers, `MAIL_MAILER=log` by default | Set `MAIL_MAILER` to `resend`/`sendgrid`/`postmark`/`smtp` in `.env` and configure `config/mail.php` |
 | Two-factor authentication | Self-contained RFC 6238 TOTP (`App\Services\TotpService`) | Compatible out of the box with Google Authenticator/Authy/1Password — no change needed, but consider WebAuthn for a production hardening pass |
 | AI bots / copy trading execution | Settle against real live crypto prices on Bitzlatoview's internal ledger (no external exchange connection) | A live exchange API connection (e.g. via a licensed broker/exchange relationship) if you want bots to execute on real external liquidity — this is a significant undertaking requiring real capital custody and its own risk controls |
 
+## Admin capabilities
+
+Every trading/product module has a dedicated admin section with real create/edit/delete capability, not just read-only reporting:
+
+| Module | Admin route | What admins can do |
+|---|---|---|
+| Markets & assets | `/admin/markets` | Create new assets and trading pairs, set maker/taker fees, update price, activate/pause pairs |
+| Stocks | `/admin/markets-extended` | Create/edit/delete instruments, bulk CSV import, activate/deactivate, manual price updates |
+| Forex | `/admin/markets-extended` | Create/edit/delete pairs, set bid/ask/spread/leverage cap, activate/deactivate |
+| Futures | `/admin/markets-extended` | Create/edit/delete markets, set max leverage/maintenance margin/funding rate |
+| Investment products | `/admin/investments` | Full CRUD: name, description, asset, expected return, risk level, lock period, payout frequency (daily/weekly), min/max investment, active status |
+| NFTs | `/admin/nft` | Create/edit/delete collections and items, upload images, set floor price |
+| Virtual cards | `/admin/virtual-cards` | Approve/reject card requests, freeze/unfreeze, configure platform-wide limits/allowed currencies/fees |
+| Branding | `/admin/settings/branding` | Upload logo/favicon, set site name, used across public/app/admin layouts |
+| P2P | `/admin/p2p/*` | Manage ads, orders, appeals, merchant approvals |
+| Payment methods, deposits, withdrawals | `/admin/payment-methods`, `/admin/deposits`, `/admin/withdrawals` | Configure manual payment rails, review proof-of-payment, two-step withdrawal approval |
+| KYC | `/admin/kyc` | Review uploaded documents, approve/reject with reason |
+| Copy trading, AI bots, mining | `/admin/copy-trading`, `/admin/ai-bots`, `/admin/mining` | Create/edit products, performance figures, risk disclosures |
+| Emails, CMS, tax | `/admin/email/*`, `/admin/cms`, `/admin/blog`, `/admin/news`, `/admin/faq`, `/admin/tax` | Edit templates/campaigns, manage pages/posts/FAQs, review tax reports |
+| Feature flags | `/admin/settings/feature-flags` | Enable/disable higher-risk modules (virtual cards, NFTs, etc.) without a deploy |
+
 ## Feature flags
 
-`App\Models\FeatureFlag` (seeded by `FeatureFlagSeeder`, managed at `/admin/settings/feature-flags`) lets an admin disable higher-risk modules (futures, mining, cards, etc.) without a deploy. Flags are not yet wired into route middleware — treat them as a starting point for a `feature.enabled:<key>` middleware if you need hard enforcement.
+`App\Models\FeatureFlag` (seeded by `FeatureFlagSeeder`, managed at `/admin/settings/feature-flags`) lets an admin disable higher-risk modules without a deploy. The `virtual_cards` flag is enforced in `App\Http\Controllers\App\VirtualCardController` (new card requests are blocked while disabled); other flags are a starting point for a `feature.enabled:<key>` middleware if you need hard enforcement everywhere.
 
 ## Running tests
 

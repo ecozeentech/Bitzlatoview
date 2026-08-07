@@ -18,7 +18,7 @@ class StockController extends Controller
 {
     public function index()
     {
-        $instruments = StockInstrument::orderBy('symbol')->get();
+        $instruments = StockInstrument::where('is_active', true)->orderBy('symbol')->get();
         $positions = StockPosition::where('user_id', Auth::id())->where('quantity', '>', 0)->with('instrument')->get();
         $orders = StockOrder::where('user_id', Auth::id())->with('instrument')->latest()->take(15)->get();
 
@@ -28,6 +28,8 @@ class StockController extends Controller
     public function store(Request $request, StockInstrument $instrument, LedgerService $ledger)
     {
         $user = Auth::user();
+
+        abort_unless($instrument->is_active, 422, 'This instrument is not currently tradable.');
 
         $data = $request->validate([
             'side' => ['required', 'in:buy,sell'],

@@ -10,9 +10,14 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\EmailController as AdminEmailController;
 use App\Http\Controllers\Admin\ExtendedMarketController as AdminExtendedMarketController;
+use App\Http\Controllers\Admin\StockInstrumentController as AdminStockInstrumentController;
+use App\Http\Controllers\Admin\ForexPairController as AdminForexPairController;
+use App\Http\Controllers\Admin\FuturesMarketController as AdminFuturesMarketController;
+use App\Http\Controllers\Admin\InvestmentProductController as AdminInvestmentProductController;
 use App\Http\Controllers\Admin\KycController as AdminKycController;
 use App\Http\Controllers\Admin\LedgerController as AdminLedgerController;
 use App\Http\Controllers\Admin\MarketController as AdminMarketController;
+use App\Http\Controllers\Admin\AssetController as AdminAssetController;
 use App\Http\Controllers\Admin\MiningController as AdminMiningController;
 use App\Http\Controllers\Admin\Mt5Controller as AdminMt5Controller;
 use App\Http\Controllers\Admin\NftController as AdminNftController;
@@ -21,6 +26,7 @@ use App\Http\Controllers\Admin\P2PController as AdminP2PController;
 use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Admin\RiskController as AdminRiskController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\Admin\SwapController as AdminSwapController;
 use App\Http\Controllers\Admin\TaxController as AdminTaxController;
@@ -248,6 +254,7 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
         Route::post('/', [VirtualCardController::class, 'store'])->middleware('kyc.approved')->name('store');
         Route::post('/{card}/freeze', [VirtualCardController::class, 'freeze'])->name('freeze');
         Route::post('/{card}/unfreeze', [VirtualCardController::class, 'unfreeze'])->name('unfreeze');
+        Route::post('/{card}/limit', [VirtualCardController::class, 'updateLimit'])->name('limit');
         Route::post('/{card}/fund', [VirtualCardController::class, 'fund'])->name('fund');
         Route::post('/{card}/reveal', [VirtualCardController::class, 'reveal'])->name('reveal');
         Route::delete('/{card}', [VirtualCardController::class, 'cancel'])->name('cancel');
@@ -354,7 +361,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/adjustments/{adjustment}/reject', [AdminAdjustmentController::class, 'reject'])->name('adjustments.reject');
 
     Route::get('/markets', [AdminMarketController::class, 'index'])->name('markets.index');
+    Route::post('/markets', [AdminMarketController::class, 'store'])->name('markets.store');
     Route::patch('/markets/{pair}', [AdminMarketController::class, 'update'])->name('markets.update');
+
+    Route::post('/assets', [AdminAssetController::class, 'store'])->name('assets.store');
+    Route::put('/assets/{asset}', [AdminAssetController::class, 'update'])->name('assets.update');
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/swap', [AdminSwapController::class, 'index'])->name('swap.index');
 
@@ -376,12 +387,38 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/mining/packages', [AdminMiningController::class, 'store'])->name('mining.store');
     Route::patch('/mining/packages/{package}', [AdminMiningController::class, 'update'])->name('mining.update');
 
-    Route::get('/investments', [AdminExtendedMarketController::class, 'investments'])->name('investments.index');
+    Route::get('/investments', [AdminInvestmentProductController::class, 'index'])->name('investments.index');
+    Route::post('/investments', [AdminInvestmentProductController::class, 'store'])->name('investments.store');
+    Route::put('/investments/{product}', [AdminInvestmentProductController::class, 'update'])->name('investments.update');
+    Route::post('/investments/{product}/toggle', [AdminInvestmentProductController::class, 'toggle'])->name('investments.toggle');
+    Route::delete('/investments/{product}', [AdminInvestmentProductController::class, 'destroy'])->name('investments.destroy');
     Route::get('/markets-extended', [AdminExtendedMarketController::class, 'index'])->name('markets-extended.index');
+
+    Route::post('/stocks', [AdminStockInstrumentController::class, 'store'])->name('stocks.store');
+    Route::put('/stocks/{instrument}', [AdminStockInstrumentController::class, 'update'])->name('stocks.update');
+    Route::delete('/stocks/{instrument}', [AdminStockInstrumentController::class, 'destroy'])->name('stocks.destroy');
+    Route::post('/stocks/import', [AdminStockInstrumentController::class, 'importCsv'])->name('stocks.import');
+
+    Route::post('/forex-pairs', [AdminForexPairController::class, 'store'])->name('forex-pairs.store');
+    Route::put('/forex-pairs/{pair}', [AdminForexPairController::class, 'update'])->name('forex-pairs.update');
+    Route::delete('/forex-pairs/{pair}', [AdminForexPairController::class, 'destroy'])->name('forex-pairs.destroy');
+
+    Route::post('/futures-markets', [AdminFuturesMarketController::class, 'store'])->name('futures-markets.store');
+    Route::put('/futures-markets/{market}', [AdminFuturesMarketController::class, 'update'])->name('futures-markets.update');
+    Route::delete('/futures-markets/{market}', [AdminFuturesMarketController::class, 'destroy'])->name('futures-markets.destroy');
     Route::get('/metatrader', [AdminMt5Controller::class, 'index'])->name('metatrader.index');
 
     Route::get('/nft', [AdminNftController::class, 'index'])->name('nft.index');
+    Route::post('/nft/collections', [AdminNftController::class, 'storeCollection'])->name('nft.collections.store');
+    Route::put('/nft/collections/{collection}', [AdminNftController::class, 'updateCollection'])->name('nft.collections.update');
+    Route::delete('/nft/collections/{collection}', [AdminNftController::class, 'destroyCollection'])->name('nft.collections.destroy');
+    Route::post('/nft/collections/{collection}/items', [AdminNftController::class, 'storeItem'])->name('nft.items.store');
+    Route::put('/nft/items/{item}', [AdminNftController::class, 'updateItem'])->name('nft.items.update');
+    Route::delete('/nft/items/{item}', [AdminNftController::class, 'destroyItem'])->name('nft.items.destroy');
     Route::get('/virtual-cards', [AdminVirtualCardController::class, 'index'])->name('virtual-cards.index');
+    Route::post('/virtual-cards/settings', [AdminVirtualCardController::class, 'updateSettings'])->name('virtual-cards.settings.update');
+    Route::post('/virtual-cards/{card}/approve', [AdminVirtualCardController::class, 'approve'])->name('virtual-cards.approve');
+    Route::post('/virtual-cards/{card}/reject', [AdminVirtualCardController::class, 'reject'])->name('virtual-cards.reject');
     Route::post('/virtual-cards/{card}/freeze', [AdminVirtualCardController::class, 'freeze'])->name('virtual-cards.freeze');
     Route::post('/virtual-cards/{card}/unfreeze', [AdminVirtualCardController::class, 'unfreeze'])->name('virtual-cards.unfreeze');
 
@@ -424,4 +461,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::get('/settings/feature-flags', [AdminSettingsController::class, 'featureFlags'])->name('settings.feature-flags');
     Route::post('/settings/feature-flags/{flag}/toggle', [AdminSettingsController::class, 'toggleFlag'])->name('settings.feature-flags.toggle');
+
+    Route::get('/settings/branding', [AdminBrandingController::class, 'edit'])->name('settings.branding');
+    Route::post('/settings/branding', [AdminBrandingController::class, 'update'])->name('settings.branding.update');
+    Route::post('/settings/branding/reset-logo', [AdminBrandingController::class, 'resetLogo'])->name('settings.branding.reset-logo');
+    Route::post('/settings/branding/reset-favicon', [AdminBrandingController::class, 'resetFavicon'])->name('settings.branding.reset-favicon');
 });

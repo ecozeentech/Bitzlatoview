@@ -29,7 +29,10 @@ class InvestmentController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:'.$product->min_amount],
+            'amount' => array_filter([
+                'required', 'numeric', 'min:'.$product->min_amount,
+                $product->max_amount ? 'max:'.$product->max_amount : null,
+            ]),
         ]);
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_INVESTMENT]);

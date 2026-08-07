@@ -6,9 +6,8 @@
 <body class="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-text-main">
     <div class="w-full max-w-md">
         <div class="mb-8 text-center">
-            <a href="{{ url('/') }}" class="inline-flex items-center gap-2 text-2xl font-extrabold">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gradient text-background">B</span>
-                Bitzlato<span class="text-brand">view</span>
+            <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
+                <x-site-logo textClass="text-2xl font-extrabold" />
             </a>
         </div>
 

@@ -5,6 +5,10 @@
     <h1 class="text-2xl font-bold">Futures Trading</h1>
     <div class="risk-banner">Futures trading is extremely high risk and can result in losses exceeding your deposit. Positions settle on Bitzlatoview's internal engine against real crypto market prices, not a live external exchange. Requires KYC and a separate futures risk agreement.</div>
 
+    @if ($markets->isNotEmpty())
+        <x-tradingview-chart :symbol="'BINANCE:'.str_replace('-PERP', '', $markets->first()->symbol).'.P'" :height="380" />
+    @endif
+
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
             <thead><tr><th>Market</th><th>Mark Price</th><th>Funding Rate</th><th>Max Leverage</th><th></th></tr></thead>

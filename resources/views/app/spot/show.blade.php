@@ -22,8 +22,8 @@
     </div>
 
     <div class="grid gap-4 lg:grid-cols-4">
-        <div class="glass-card flex h-80 items-center justify-center p-4 lg:col-span-3">
-            <p class="text-sm text-text-muted">Candlestick chart placeholder — integrate TradingView Lightweight Charts here.</p>
+        <div class="lg:col-span-3">
+            <x-tradingview-chart :symbol="'BINANCE:'.str_replace('-', '', $market->symbol)" :height="380" />
         </div>
         <div class="glass-card p-4">
             <h3 class="mb-2 text-sm font-semibold">Recent Trades</h3>

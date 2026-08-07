@@ -10,6 +10,12 @@
         <a href="{{ route('app.p2p.merchant') }}" class="nav-link">Become a Merchant</a>
     </div>
 
+    @if (auth()->user()->kyc_status !== 'approved')
+        <div class="risk-banner">
+            <strong class="text-text-main">Identity verification required.</strong> P2P trading involves real money moving between users, so we require approved KYC before you can open an order — this protects both sides of every trade. <a href="{{ url('/app/settings/kyc') }}" class="text-brand hover:underline">Complete verification</a> to unlock trading.
+        </div>
+    @endif
+
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
             <thead><tr><th>Merchant</th><th>Price</th><th>Available</th><th>Limits</th><th>Payment</th><th></th></tr></thead>
@@ -32,7 +38,11 @@
                         <td class="text-text-muted">{{ number_format($ad->min_limit) }}–{{ number_format($ad->max_limit) }} {{ $ad->fiat_currency }}</td>
                         <td class="text-text-muted text-xs">{{ $ad->terms ? \Illuminate\Support\Str::limit($ad->terms, 40) : 'Any' }}</td>
                         <td>
-                            <button type="button" @click="open = open === {{ $ad->id }} ? null : {{ $ad->id }}" class="btn-brand text-xs">{{ $mode === 'buy' ? 'Buy' : 'Sell' }} {{ $ad->asset->symbol }}</button>
+                            @if (auth()->user()->kyc_status === 'approved')
+                                <button type="button" @click="open = open === {{ $ad->id }} ? null : {{ $ad->id }}" class="btn-brand text-xs">{{ $mode === 'buy' ? 'Buy' : 'Sell' }} {{ $ad->asset->symbol }}</button>
+                            @else
+                                <a href="{{ url('/app/settings/kyc') }}" class="btn-outline text-xs">Verify to trade</a>
+                            @endif
                         </td>
                     </tr>
                     <tr x-show="open === {{ $ad->id }}" x-cloak>

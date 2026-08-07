@@ -1,8 +1,7 @@
 <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:px-6">
     <div class="flex items-center gap-4">
-        <a href="{{ url('/') }}" class="flex items-center gap-2 text-lg font-extrabold">
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-background">B</span>
-            <span class="hidden sm:inline">Bitzlato<span class="text-brand">view</span></span>
+        <a href="{{ url('/') }}" class="flex items-center gap-2">
+            <x-site-logo textClass="hidden text-lg font-extrabold sm:inline" />
         </a>
         <div class="hidden items-center rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-text-muted md:flex">
             <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/></svg>

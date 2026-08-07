@@ -6,9 +6,8 @@
 <body class="min-h-screen bg-background text-text-main">
     <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:px-6">
         <div class="flex items-center gap-3">
-            <a href="{{ url('/admin') }}" class="flex items-center gap-2 text-lg font-extrabold">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gradient text-background">B</span>
-                Bitzlato<span class="text-brand">view</span>
+            <a href="{{ url('/admin') }}" class="flex items-center gap-2">
+                <x-site-logo textClass="text-lg font-extrabold" />
                 <span class="pill-info ml-1">Admin</span>
             </a>
         </div>
