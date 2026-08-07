@@ -9,6 +9,7 @@ use App\Models\CardTransaction;
 use App\Models\VirtualCard;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
+use App\Services\TransactionalMailService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class VirtualCardController extends Controller
         return view('app.virtual-cards.index', compact('cards'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -47,8 +48,9 @@ class VirtualCardController extends Controller
         ]);
 
         AuditLog::record($user, 'virtual_card.created', VirtualCard::class, $card->id);
+        $mailer->send($user, 'virtual_card_created', ['name' => $user->name, 'last_four' => $lastFour]);
 
-        return back()->with('success', 'Virtual card created. This is a simulated card (no real issuing provider connected). Use Stripe Issuing, Marqeta or Lithic for a live deployment.');
+        return back()->with('success', 'Card record created. This is NOT a real, spendable payment card — no licensed card-issuing provider is connected yet. Cards are issued by regulated bank partners under Visa/Mastercard licenses (e.g. via Stripe Issuing, Marqeta or Lithic); this feature will only produce real cards once one of those is integrated.');
     }
 
     public function freeze(VirtualCard $card)
@@ -100,7 +102,7 @@ class VirtualCardController extends Controller
             'occurred_at' => now(),
         ]);
 
-        return back()->with('success', 'Card funded (simulated spend record created).');
+        return back()->with('success', 'Card funding recorded on your account ledger. No real payment network transaction occurred — this card cannot be used for real purchases until a licensed issuing provider is connected.');
     }
 
     public function reveal(VirtualCard $card)

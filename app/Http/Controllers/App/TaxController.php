@@ -8,6 +8,7 @@ use App\Models\MiningReward;
 use App\Models\SwapTransaction;
 use App\Models\TaxReport;
 use App\Models\Trade;
+use App\Services\TransactionalMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,7 +43,7 @@ class TaxController extends Controller
         ]);
     }
 
-    public function generate(Request $request)
+    public function generate(Request $request, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -69,6 +70,8 @@ class TaxController extends Controller
             'fees_paid' => $fees,
             'generated_at' => now(),
         ]);
+
+        $mailer->send($user, 'tax_report_ready', ['name' => $user->name, 'year' => (string) $data['year']]);
 
         return back()->with('success', "Tax report generated for {$data['year']}.");
     }

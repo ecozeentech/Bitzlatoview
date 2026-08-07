@@ -11,6 +11,7 @@ use App\Models\MiningReward;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
 use App\Services\RewardAccrualService;
+use App\Services\TransactionalMailService;
 use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,7 @@ class MiningController extends Controller
         return view('app.mining.rewards', compact('rewards'));
     }
 
-    public function purchase(Request $request, MiningPackage $package, LedgerService $ledger)
+    public function purchase(Request $request, MiningPackage $package, LedgerService $ledger, TransactionalMailService $mailer)
     {
         $user = Auth::user();
 
@@ -85,6 +86,7 @@ class MiningController extends Controller
         ]);
 
         AuditLog::record($user, 'mining.purchased', MiningContract::class, $contract->id);
+        $mailer->send($user, 'mining_contract_purchased', ['name' => $user->name, 'package' => $package->name, 'amount' => number_format($cost, 2)]);
 
         return redirect()->route('app.mining.contracts')->with('success', "Purchased {$package->name}. Rewards will accrue daily to your ".ucfirst($data['reward_destination']).' Wallet.');
     }

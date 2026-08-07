@@ -34,7 +34,7 @@ class EmailTemplateSeeder extends Seeder
             EmailTemplate::updateOrCreate(
                 ['key' => $template['key']],
                 $template + [
-                    'body_html' => '<p>This is a placeholder transactional email body for the "'.$template['name'].'" template. Connect a real provider (Resend/SendGrid/Postmark/SMTP) in production.</p>',
+                    'body_html' => '<p>This is the default body for the "'.$template['name'].'" template. Edit it from Admin &gt; Email &gt; Templates.</p>',
                     'type' => 'transactional',
                     'is_active' => true,
                 ]
