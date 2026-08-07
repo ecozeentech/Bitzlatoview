@@ -20,7 +20,7 @@ class ForexController extends Controller
 
     public function index()
     {
-        $pairs = ForexPair::orderBy('symbol')->get();
+        $pairs = ForexPair::where('is_active', true)->orderBy('symbol')->get();
         $positions = ForexPosition::where('user_id', Auth::id())->where('status', 'open')->with('pair')->get();
         $history = ForexOrder::where('user_id', Auth::id())->with('pair')->latest()->take(15)->get();
 
@@ -31,10 +31,12 @@ class ForexController extends Controller
     {
         $user = Auth::user();
 
+        abort_unless($pair->is_active, 422, 'This pair is not currently tradable.');
+
         $data = $request->validate([
             'side' => ['required', 'in:buy,sell'],
             'lot_size' => ['required', 'numeric', 'gt:0'],
-            'leverage' => ['required', 'integer', 'in:10,20,50,100'],
+            'leverage' => ['required', 'integer', 'min:1', 'max:'.$pair->leverage_max],
         ]);
 
         $margin = round((self::MARGIN_PER_LOT * $data['lot_size']) / $data['leverage'], 2);

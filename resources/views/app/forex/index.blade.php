@@ -5,6 +5,10 @@
     <h1 class="text-2xl font-bold">Forex Trading (Paper Mode)</h1>
     <div class="risk-banner">Forex trading carries a high level of risk and may not be suitable for all investors. This runs in paper mode pending a licensed live forex data feed and broker connection. <a href="{{ url('/app/metatrader-5') }}" class="underline">Connect MetaTrader 5</a> for the broader Meta Trading experience.</div>
 
+    @if ($pairs->isNotEmpty())
+        <x-tradingview-chart :symbol="'FX:'.str_replace('/', '', $pairs->first()->symbol)" :height="380" />
+    @endif
+
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
             <thead><tr><th>Pair</th><th>Bid</th><th>Ask</th><th>Spread (pips)</th><th></th></tr></thead>
@@ -24,7 +28,11 @@
                                 <select name="side" class="input-field w-32"><option value="buy">Buy</option><option value="sell">Sell</option></select>
                                 <input type="number" step="0.01" name="lot_size" class="input-field w-32" placeholder="Lot size" required>
                                 <select name="leverage" class="input-field w-32">
-                                    <option value="10">1:10</option><option value="20">1:20</option><option value="50" selected>1:50</option><option value="100">1:100</option>
+                                    @foreach (array_unique([10, 20, 50, min(100, $p->leverage_max), $p->leverage_max]) as $lev)
+                                        @if ($lev <= $p->leverage_max)
+                                            <option value="{{ $lev }}" @selected($lev === min(50, $p->leverage_max))>1:{{ $lev }}</option>
+                                        @endif
+                                    @endforeach
                                 </select>
                                 <button class="btn-brand text-sm">Open Position</button>
                             </form>
