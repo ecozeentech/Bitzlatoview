@@ -48,15 +48,15 @@ class Mt5Controller extends Controller
         Mt5SyncLog::create([
             'mt5_account_id' => $account->id,
             'status' => 'success',
-            'message' => 'Initial simulated connection established.',
+            'message' => 'Account record created. No live broker/Manager API connection exists yet.',
             'synced_at' => now(),
         ]);
 
-        $this->seedSimulatedPositions($account);
+        $this->seedPlaceholderPositions($account);
 
         AuditLog::record(Auth::user(), 'mt5.connected', Mt5Account::class, $account->id);
 
-        return back()->with('success', 'MT5 account connected (simulated). Credentials are encrypted at rest and never displayed in plain text.');
+        return back()->with('success', 'MT5 account saved. Credentials are encrypted at rest and never displayed in plain text — but note this does NOT yet sync with a real MT5 server; positions shown are placeholders until a licensed broker\'s Manager API is connected.');
     }
 
     public function sync(Mt5Account $account)
@@ -75,11 +75,11 @@ class Mt5Controller extends Controller
         Mt5SyncLog::create([
             'mt5_account_id' => $account->id,
             'status' => 'success',
-            'message' => 'Synced simulated positions and trade history.',
+            'message' => 'Refreshed placeholder positions — no real broker sync occurred.',
             'synced_at' => now(),
         ]);
 
-        return back()->with('success', 'Account synced.');
+        return back()->with('success', 'Refreshed. This account is not yet linked to a real MT5 server, so no real broker data was synced.');
     }
 
     public function disconnect(Mt5Account $account)
@@ -92,7 +92,7 @@ class Mt5Controller extends Controller
         return back()->with('success', 'MT5 account disconnected.');
     }
 
-    protected function seedSimulatedPositions(Mt5Account $account): void
+    protected function seedPlaceholderPositions(Mt5Account $account): void
     {
         $symbols = ['EURUSD', 'GBPUSD', 'USDJPY'];
 

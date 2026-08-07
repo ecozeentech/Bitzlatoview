@@ -15,8 +15,8 @@ class FeatureFlagSeeder extends Seeder
             ['key' => 'forex_trading', 'name' => 'Forex Trading', 'description' => 'Enable paper forex trading module.'],
             ['key' => 'ai_bots', 'name' => 'AI Trading Bots', 'description' => 'Enable AI bot investment marketplace.'],
             ['key' => 'mining', 'name' => 'Crypto Mining', 'description' => 'Enable mining contract purchases.'],
-            ['key' => 'virtual_cards', 'name' => 'Virtual Cards', 'description' => 'Enable virtual card issuance (simulated).'],
-            ['key' => 'nft_marketplace', 'name' => 'NFT Marketplace', 'description' => 'Enable NFT browsing and mock trading.'],
+            ['key' => 'virtual_cards', 'name' => 'Virtual Cards', 'description' => 'Enable virtual card issuance (requires a licensed card-issuing provider for real cards).'],
+            ['key' => 'nft_marketplace', 'name' => 'NFT Marketplace', 'description' => 'Enable NFT browsing and internal-ledger trading.'],
             ['key' => 'p2p_merchant_onboarding', 'name' => 'P2P Merchant Onboarding', 'description' => 'Allow new users to apply for P2P merchant status.'],
         ];
 

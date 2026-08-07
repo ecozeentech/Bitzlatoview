@@ -28,7 +28,7 @@ class BillingController extends Controller
         ]);
 
         BillingPackage::create($data + [
-            'description' => 'Simulated analyst research subscription. Not investment advice.',
+            'description' => 'Analyst research subscription. Not investment advice.',
             'risk_disclosure' => 'Research and commentary are for informational purposes only and do not constitute investment advice.',
             'report_access' => true,
             'status' => 'active',

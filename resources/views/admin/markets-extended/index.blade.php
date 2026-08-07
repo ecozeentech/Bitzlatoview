@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Stocks / Forex / Futures Markets</h1>
-    <div class="risk-banner">Paper trading mode is active platform-wide. Live broker adapters (Alpaca, Tradier, DriveWealth, MT5 bridges) are not connected in this build.</div>
+    <div class="risk-banner">Stocks and forex remain in paper-trading mode platform-wide. Live broker adapters (Alpaca, Tradier, DriveWealth, MT5 bridges) and a licensed market data feed are not connected yet — crypto markets already use live CoinGecko pricing.</div>
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Stocks</h2>

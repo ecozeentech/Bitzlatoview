@@ -3,7 +3,7 @@
 @section('content')
 <div class="mx-auto max-w-2xl space-y-6">
     <h1 class="text-2xl font-bold">API Keys</h1>
-    <div class="risk-banner">API keys are a placeholder for programmatic access. No trading endpoints are wired to external API access in this simulation build.</div>
+    <div class="risk-banner">Public API access for programmatic trading is not yet available — keys generated here are not currently wired to any trading endpoints.</div>
 
     <div class="glass-card p-6">
         <form method="POST" action="{{ route('app.settings.api-keys.generate') }}" class="flex gap-2">

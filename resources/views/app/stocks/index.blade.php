@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Stock Trading (Paper Mode)</h1>
-    <div class="risk-banner">This is a simulated paper-trading environment. No real securities are bought or sold. Market hours label: NASDAQ paper feed — always open in simulation.</div>
+    <div class="risk-banner">This is a paper-trading environment. No real securities are bought or sold, and prices are not yet fed by a licensed market data vendor.</div>
 
     <div class="glass-card overflow-x-auto">
         <table class="data-table">

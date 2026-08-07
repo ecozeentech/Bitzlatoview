@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Investment / Earn Products</h1>
-    <div class="risk-banner">Investment products carry risk of loss. Rates are illustrative and simulated, not guaranteed.</div>
+    <div class="risk-banner">Investment products carry risk of loss. Rates are illustrative, not guaranteed.</div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         @foreach ($products as $product)

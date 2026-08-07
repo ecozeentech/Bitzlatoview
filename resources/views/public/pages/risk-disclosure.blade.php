@@ -21,7 +21,7 @@
         <p>When you copy a trader, your account replicates trades based on their strategy. Past performance of any trader is not indicative of future results, and copy trading can result in losses even if the copied trader has a positive track record.</p>
 
         <h2 class="text-text-main">AI Trading Bots</h2>
-        <p>AI trading bots are experimental automated strategies. They are not guaranteed to be profitable and may lose money, including during backtesting-favorable conditions that do not repeat in live or simulated markets.</p>
+        <p>AI trading bots are experimental automated strategies running on Bitzlatoview's internal engine. They are not guaranteed to be profitable and may lose money, including during conditions that looked favorable in past performance data but do not repeat going forward.</p>
 
         <h2 class="text-text-main">Mining Contracts</h2>
         <p>Mining rewards depend on network difficulty, coin price, and maintenance fees, all of which can change unpredictably. Mining contract returns are never guaranteed and can go to zero.</p>

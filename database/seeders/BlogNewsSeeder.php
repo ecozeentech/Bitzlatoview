@@ -15,7 +15,7 @@ class BlogNewsSeeder extends Seeder
             ['title' => 'Getting Started with Bitzlatoview', 'category' => 'Guides', 'excerpt' => 'A walkthrough of the dashboard, wallets, and where to find every product.'],
             ['title' => 'Understanding Double-Entry Ledgers in Crypto Platforms', 'category' => 'Education', 'excerpt' => 'Why every balance change should be auditable — and how Bitzlatoview implements it.'],
             ['title' => '5 Risk Management Tips Before You Start Copy Trading', 'category' => 'Education', 'excerpt' => 'Copy trading can amplify both gains and losses — here is how to manage exposure.'],
-            ['title' => 'What Is Paper Trading and Why Bitzlatoview Starts There', 'category' => 'Company', 'excerpt' => 'Simulation mode lets you learn every product risk-free while we finish licensing work.'],
+            ['title' => 'How Bitzlatoview Verifies Every Deposit and Withdrawal', 'category' => 'Company', 'excerpt' => 'Why we manually review proof of payment before crediting a wallet, and what that means for you.'],
         ];
 
         foreach ($posts as $post) {
@@ -23,7 +23,7 @@ class BlogNewsSeeder extends Seeder
                 ['title' => $post['title']],
                 $post + [
                     'slug' => Str::slug($post['title']),
-                    'content' => "<p>{$post['excerpt']}</p><p>This is placeholder editorial content for the Bitzlatoview blog CMS demo.</p>",
+                    'content' => "<p>{$post['excerpt']}</p><p>Full article content can be edited from the admin CMS.</p>",
                     'author' => 'Bitzlatoview Team',
                     'status' => 'published',
                     'published_at' => now()->subDays(random_int(1, 30)),
@@ -43,8 +43,8 @@ class BlogNewsSeeder extends Seeder
                 ['title' => $article['title']],
                 $article + [
                     'slug' => Str::slug($article['title']),
-                    'summary' => 'Simulated market news for demo purposes — not financial advice.',
-                    'content' => '<p>Simulated market news content.</p>',
+                    'summary' => 'Market commentary — not financial advice.',
+                    'content' => '<p>Full article content can be edited from the admin CMS.</p>',
                     'source' => 'Bitzlatoview Newsroom',
                     'published_at' => now()->subHours(random_int(1, 72)),
                 ]

@@ -8,12 +8,12 @@
     <div class="mx-auto max-w-7xl px-4 py-20 lg:px-8 lg:py-28">
         <div class="grid items-center gap-12 lg:grid-cols-2">
             <div>
-                <span class="pill-warning mb-4">Simulation / Paper-Trading Mode</span>
+                <span class="pill-warning mb-4">Compliance-first exchange</span>
                 <h1 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
                     Trade Crypto, Stocks, Forex, NFTs and Futures on <span class="text-brand">Bitzlatoview</span>
                 </h1>
                 <p class="mt-5 max-w-lg text-lg text-text-muted">
-                    One modern dashboard for digital and global markets — spot, swap, P2P, futures, copy trading, AI bots, mining and more. Built compliance-first, running in simulation mode until licensed providers are connected.
+                    One modern dashboard for digital and global markets — spot, swap, P2P, futures, copy trading, AI bots, mining and more. Built compliance-first, with every fund movement reviewed by our team and recorded on a real double-entry ledger.
                 </p>
                 <div class="mt-8 flex flex-wrap gap-4">
                     <a href="{{ route('register') }}" class="btn-brand">Get Started</a>
@@ -25,7 +25,7 @@
             <div class="glass-card p-5">
                 <div class="mb-4 flex items-center justify-between">
                     <h3 class="font-semibold">Live Market Snapshot</h3>
-                    <span class="pill-success">Simulated feed</span>
+                    <span class="pill-success">Live feed</span>
                 </div>
                 <div class="space-y-3">
                     @foreach ($markets->take(5) as $market)
@@ -98,7 +98,7 @@
     <div class="glass-card grid gap-6 p-6 md:grid-cols-3">
         <div>
             <h4 class="mb-2 font-semibold text-success">Buy</h4>
-            <p class="text-sm text-text-muted">Buy crypto instantly with a linked bank balance or card (paper mode).</p>
+            <p class="text-sm text-text-muted">Buy crypto instantly using your Bitzlatoview balance.</p>
             <a href="/buy-crypto" class="btn-outline mt-4 w-full text-sm">Buy Crypto</a>
         </div>
         <div>
@@ -108,7 +108,7 @@
         </div>
         <div>
             <h4 class="mb-2 font-semibold text-info">Swap</h4>
-            <p class="text-sm text-text-muted">Convert between assets instantly with transparent simulated rates.</p>
+            <p class="text-sm text-text-muted">Convert between assets instantly with transparent live rates.</p>
             <a href="/swap" class="btn-outline mt-4 w-full text-sm">Swap Now</a>
         </div>
     </div>
@@ -126,12 +126,12 @@
                 ['Futures', 'Leveraged perpetual futures — high risk.', '/futures', '⚡'],
                 ['Copy Trading', 'Follow verified traders automatically.', '/copy-trading', '👥'],
                 ['AI Trading Bots', 'Automated strategies. No guaranteed returns.', '/ai-trading-bot', '🤖'],
-                ['Mining', 'Simulated hashpower contracts.', '/mining', '⛏️'],
+                ['Mining', 'Transparent hashpower contracts.', '/mining', '⛏️'],
                 ['NFT Marketplace', 'Browse and collect digital assets.', '/nft', '🖼️'],
                 ['Stocks', 'Paper-trade major listed equities.', '/stocks', '📊'],
-                ['Forex', 'Simulated major/minor currency pairs.', '/forex', '💱'],
+                ['Forex', 'Major/minor currency pairs.', '/forex', '💱'],
                 ['MetaTrader 5', 'Connect broker accounts, sync positions.', '/metatrader-5', '🖥️'],
-                ['Virtual Cards', 'Mock virtual card issuance and spend.', '/app/virtual-cards', '💳'],
+                ['Virtual Cards', 'Card account records, pending a licensed issuer.', '/app/virtual-cards', '💳'],
             ];
         @endphp
         @foreach ($products as [$title, $desc, $href, $icon])
@@ -201,13 +201,13 @@
         <div class="glass-card p-6">
             <span class="pill-info">AI Trading Bots</span>
             <h3 class="mt-3 font-semibold">Strategy marketplace</h3>
-            <p class="mt-2 text-sm text-text-muted">Grid, DCA, trend and arbitrage strategies with simulated backtests. Experimental — may lose money.</p>
+            <p class="mt-2 text-sm text-text-muted">Grid, DCA, trend and arbitrage strategies with disclosed backtested performance. Experimental — may lose money.</p>
             <a href="/ai-trading-bot" class="mt-4 inline-block text-sm text-brand hover:underline">View bots →</a>
         </div>
         <div class="glass-card p-6">
             <span class="pill-success">Mining</span>
             <h3 class="mt-3 font-semibold">Hashpower contracts</h3>
-            <p class="mt-2 text-sm text-text-muted">Transparent hashrate, term and fees. Rewards are simulated and never guaranteed.</p>
+            <p class="mt-2 text-sm text-text-muted">Transparent hashrate, term and fees. Rewards follow the disclosed rate and are never guaranteed.</p>
             <a href="/mining" class="mt-4 inline-block text-sm text-brand hover:underline">View contracts →</a>
         </div>
     </div>
@@ -288,14 +288,14 @@
         <div>
             <span class="pill-warning">Virtual Cards</span>
             <h3 class="mt-3 text-xl font-bold">Spend your balance anywhere online</h3>
-            <p class="mt-2 text-sm text-text-muted">Create a virtual card funded from your Primary Wallet. In production, cards would be issued via a licensed bank-partner processor (e.g. Stripe Issuing, Marqeta, Lithic) under Visa/Mastercard rules — this build uses mock data.</p>
+            <p class="mt-2 text-sm text-text-muted">Create a virtual card funded from your Primary Wallet. Real, spendable cards require a licensed bank-partner processor (e.g. Stripe Issuing, Marqeta, Lithic) under Visa/Mastercard rules — cards created today are account records only until that integration goes live.</p>
             <a href="/app/virtual-cards" class="btn-brand mt-5 inline-flex">Get a Virtual Card</a>
         </div>
         <div class="mx-auto h-48 w-80 rounded-2xl bg-gradient-to-br from-surface-2 to-background p-5 shadow-glass ring-1 ring-border">
             <p class="text-xs text-text-muted">Bitzlatoview</p>
             <p class="mt-8 font-numeric text-lg tracking-widest">•••• •••• •••• 4821</p>
             <div class="mt-6 flex justify-between text-xs text-text-muted">
-                <span>DEMO USER</span>
+                <span>CARDHOLDER NAME</span>
                 <span>12/29</span>
             </div>
         </div>
@@ -340,7 +340,7 @@
 <section class="mx-auto max-w-7xl px-4 py-20 lg:px-8">
     <div class="glass-card flex flex-col items-center gap-6 p-10 text-center">
         <h2 class="text-2xl font-bold">Ready to explore Bitzlatoview?</h2>
-        <p class="max-w-xl text-text-muted">Create a free account and start exploring every market in simulation mode — no risk, full feature access.</p>
+        <p class="max-w-xl text-text-muted">Create a free account and start exploring every market with full feature access.</p>
         <a href="{{ route('register') }}" class="btn-brand">Create Free Account</a>
     </div>
 </section>

@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Forex Trading (Paper Mode)</h1>
-    <div class="risk-banner">Forex trading carries a high level of risk and may not be suitable for all investors. Simulated pricing only. <a href="{{ url('/app/metatrader-5') }}" class="underline">Connect MetaTrader 5</a> for the broader Meta Trading experience.</div>
+    <div class="risk-banner">Forex trading carries a high level of risk and may not be suitable for all investors. This runs in paper mode pending a licensed live forex data feed and broker connection. <a href="{{ url('/app/metatrader-5') }}" class="underline">Connect MetaTrader 5</a> for the broader Meta Trading experience.</div>
 
     <div class="glass-card overflow-x-auto">
         <table class="data-table">

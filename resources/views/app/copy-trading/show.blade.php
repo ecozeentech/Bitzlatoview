@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <div class="risk-banner">Copy trading can amplify gains and losses. Past performance does not guarantee future results. No returns are guaranteed. Simulated performance data.</div>
+    <div class="risk-banner">Copy trading can amplify gains and losses. Past performance does not guarantee future results. No returns are guaranteed, and you can lose your allocated amount.</div>
 
     @if ($myAllocation)
         <div class="glass-card p-6">

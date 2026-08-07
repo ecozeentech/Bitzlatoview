@@ -6,7 +6,7 @@
         <h1 class="text-2xl font-bold">AI Trading Bot Marketplace</h1>
         <a href="{{ route('app.ai-bots.my-bots') }}" class="btn-outline text-sm">My Bots</a>
     </div>
-    <div class="risk-banner">AI trading bots are experimental and may lose money. Bitzlatoview never guarantees returns. This build runs in simulated/paper mode.</div>
+    <div class="risk-banner">AI trading bots are experimental and may lose money. Bitzlatoview never guarantees returns. Bots run on Bitzlatoview's own internal engine, not a live connection to an external exchange.</div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($bots as $bot)

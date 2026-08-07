@@ -105,6 +105,6 @@ class NftController extends Controller
 
         AuditLog::record(Auth::user(), 'nft.bid_placed', NftItem::class, $item->id);
 
-        return back()->with('success', 'Bid placed (mock flow — no real on-chain settlement in this build).');
+        return back()->with('success', 'Bid placed. Settlement happens on Bitzlatoview\'s internal ledger — this does not yet settle on-chain.');
     }
 }

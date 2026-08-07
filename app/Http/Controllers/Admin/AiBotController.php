@@ -28,7 +28,7 @@ class AiBotController extends Controller
         ]);
 
         AiBot::create($data + [
-            'description' => 'AI trading bot is experimental, runs in simulated/paper mode, and may lose money. No guaranteed returns.',
+            'description' => 'AI trading bot is experimental and may lose money. It runs on Bitzlatoview\'s internal strategy engine, not a live connection to an external exchange. No guaranteed returns.',
             'status' => 'active',
         ]);
 

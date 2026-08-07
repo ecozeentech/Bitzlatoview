@@ -25,7 +25,7 @@ class MiningSeeder extends Seeder
             MiningPackage::updateOrCreate(
                 ['name' => $package['name']],
                 $package + [
-                    'risk_disclosure' => 'Mining rewards are simulated and not guaranteed. Rewards depend on network difficulty, coin price, and maintenance fees, and can go to zero.',
+                    'risk_disclosure' => 'Mining rewards follow the disclosed reward rate and are not guaranteed. Rewards depend on network difficulty, coin price, and maintenance fees, and can go to zero.',
                     'is_published' => true,
                 ]
             );

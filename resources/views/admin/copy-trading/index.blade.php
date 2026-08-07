@@ -5,7 +5,7 @@
     <h1 class="text-2xl font-bold">Copy Trading — Traders</h1>
 
     <div class="glass-card p-6">
-        <h2 class="mb-3 font-semibold">Create Demo Trader</h2>
+        <h2 class="mb-3 font-semibold">Create Trader Profile</h2>
         <form method="POST" action="{{ route('admin.copy-trading.store') }}" class="grid gap-3 sm:grid-cols-4">
             @csrf
             <input type="text" name="display_name" class="input-field" placeholder="Display name" required>
