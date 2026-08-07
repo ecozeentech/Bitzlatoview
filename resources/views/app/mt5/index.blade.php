@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">MetaTrader 5 / Meta Trading</h1>
-    <div class="risk-banner"><strong class="text-danger">Not connected to a real broker yet.</strong> MT5 officially supports forex, stocks, futures, algorithmic and copy trading, but a live connection requires a licensed broker's Manager API and proper regulatory approval. Accounts saved here do not sync with any real MT5 server — positions shown are placeholder data only. Credentials are encrypted at rest and never displayed in plain text.</div>
+    <div class="risk-banner"><strong class="text-text-main">MT5 integration status: broker connection pending.</strong> MT5 officially supports forex, stocks, futures, algorithmic and copy trading, and a live connection requires a licensed broker's Manager API plus proper regulatory approval — that step isn't complete yet. Accounts saved here securely store your broker/login details for when that connection goes live, but do not sync with any real MT5 server today, so positions shown are placeholder data only. Credentials are encrypted at rest and never displayed in plain text.</div>
 
     <div class="grid gap-4 lg:grid-cols-3">
         <div class="glass-card p-4 text-center"><p class="text-xs text-text-muted">Web Terminal</p><p class="mt-2 text-sm">Coming soon — requires broker/provider licensing</p></div>
