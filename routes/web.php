@@ -162,6 +162,10 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
 
     // P2P
     Route::prefix('p2p')->name('p2p.')->group(function () {
+        // The sidebar links to the bare '/app/p2p' prefix (see partials.app-sidebar), but only
+        // sub-paths like /buy and /sell were ever registered — that made the main "P2P" nav
+        // link 404 for every user. Route the index straight to the Buy Crypto view.
+        Route::get('/', [P2PController::class, 'buy'])->name('index');
         Route::get('/buy', [P2PController::class, 'buy'])->name('buy');
         Route::get('/sell', [P2PController::class, 'sell'])->name('sell');
         Route::get('/orders', [P2PController::class, 'orders'])->name('orders');
