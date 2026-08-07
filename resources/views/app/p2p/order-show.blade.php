@@ -3,7 +3,7 @@
 @section('content')
 @php $isBuyer = $order->buyer_id === auth()->id(); @endphp
 <div class="mx-auto max-w-3xl space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">P2P Order #{{ $order->id }}</h1>
         <span class="pill-{{ $order->status === 'completed' ? 'success' : ($order->status === 'cancelled' ? 'danger' : 'warning') }}">{{ str_replace('_',' ',$order->status) }}</span>
     </div>

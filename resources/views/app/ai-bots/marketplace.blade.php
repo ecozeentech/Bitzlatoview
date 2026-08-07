@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">AI Trading Bot Marketplace</h1>
         <a href="{{ route('app.ai-bots.my-bots') }}" class="btn-outline text-sm">My Bots</a>
     </div>

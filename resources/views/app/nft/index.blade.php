@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">NFT Marketplace</h1>
         <div class="flex gap-2">
             <a href="{{ url('/app/nft/my-nfts') }}" class="btn-outline text-sm">My NFTs</a>

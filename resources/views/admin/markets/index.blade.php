@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="space-y-6" x-data="{ addAsset: false, addPair: false, editFees: null }">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold">Markets &amp; Assets</h1>
         <div class="flex gap-2">
             <button type="button" @click="addAsset = !addAsset" class="btn-outline text-sm">+ New Asset</button>
