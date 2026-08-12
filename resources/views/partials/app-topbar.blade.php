@@ -16,8 +16,12 @@
         @if (auth()->user()->kyc_status !== 'approved')
             <a href="{{ url('/kyc-onboarding') }}" class="pill-warning hidden sm:inline-flex">KYC: {{ str_replace('_',' ', auth()->user()->kyc_status) }}</a>
         @endif
+        <div class="hidden text-right lg:block">
+            <p class="font-numeric text-sm font-semibold leading-tight">${{ number_format($topbarBalanceUsd ?? 0, 2) }}</p>
+            <p class="font-numeric text-[11px] leading-tight text-text-muted">{{ number_format($topbarBalanceBtc ?? 0, 6) }} BTC</p>
+        </div>
         <a href="{{ url('/app/funding/deposit') }}" class="btn-brand hidden text-sm sm:inline-flex">Deposit</a>
-        <a href="{{ url('/app/settings/wallet-connect') }}" class="btn-outline hidden text-sm md:inline-flex">Connect Wallet</a>
+        <a href="{{ url('/app/funding/withdraw') }}" class="btn-outline hidden text-sm md:inline-flex">Withdraw</a>
 
         <div class="relative" x-data="{ open: false }" x-init="$watch('open', (value) => { if (value) { fetch('{{ route('app.notifications.mark-read') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } }); } })">
             <button @click="open = !open" class="relative rounded-lg border border-border bg-surface-2 p-2 text-text-muted hover:text-text-main" aria-label="Notifications">
