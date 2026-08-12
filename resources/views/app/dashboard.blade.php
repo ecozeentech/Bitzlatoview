@@ -13,58 +13,24 @@
     @endif
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="glass-card p-5">
-            <p class="text-xs uppercase text-text-muted">Total Portfolio Value</p>
-            <p class="mt-2 font-numeric text-2xl font-bold">${{ number_format($portfolioTotal, 2) }}</p>
-            <p class="mt-1 text-xs text-text-muted">Across Primary, Trading &amp; Investment wallets</p>
-        </div>
-        <div class="glass-card p-5">
-            <p class="text-xs uppercase text-text-muted">Primary Wallet</p>
-            <p class="mt-2 font-numeric text-2xl font-bold">${{ number_format($walletTotals['primary'] ?? 0, 2) }}</p>
-            <a href="{{ url('/app/wallet/primary') }}" class="mt-1 inline-block text-xs text-brand hover:underline">View wallet →</a>
-        </div>
-        <div class="glass-card p-5">
-            <p class="text-xs uppercase text-text-muted">Trading Wallet</p>
-            <p class="mt-2 font-numeric text-2xl font-bold">${{ number_format($walletTotals['trading'] ?? 0, 2) }}</p>
-            <a href="{{ url('/app/wallet/trading') }}" class="mt-1 inline-block text-xs text-brand hover:underline">View wallet →</a>
-        </div>
-        <div class="glass-card p-5">
-            <p class="text-xs uppercase text-text-muted">Investment Wallet</p>
-            <p class="mt-2 font-numeric text-2xl font-bold">${{ number_format($walletTotals['investment'] ?? 0, 2) }}</p>
-            <a href="{{ url('/app/wallet/investment') }}" class="mt-1 inline-block text-xs text-brand hover:underline">View wallet →</a>
-        </div>
+        <x-stat-card icon="dashboard" tone="brand" label="Total Portfolio Value" :value="'$'.number_format($portfolioTotal, 2)" sub="Across Primary, Trading &amp; Investment wallets" />
+        <x-stat-card icon="wallet" tone="info" label="Primary Wallet" :value="'$'.number_format($walletTotals['primary'] ?? 0, 2)" href="{{ url('/app/wallet/primary') }}" sub="View wallet" />
+        <x-stat-card icon="wallet" tone="info" label="Trading Wallet" :value="'$'.number_format($walletTotals['trading'] ?? 0, 2)" href="{{ url('/app/wallet/trading') }}" sub="View wallet" />
+        <x-stat-card icon="wallet" tone="info" label="Investment Wallet" :value="'$'.number_format($walletTotals['investment'] ?? 0, 2)" href="{{ url('/app/wallet/investment') }}" sub="View wallet" />
     </div>
 
     <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold">{{ $openOrders }}</p>
-            <p class="text-xs text-text-muted">Open Orders</p>
-        </div>
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold">{{ $openFutures }}</p>
-            <p class="text-xs text-text-muted">Futures Positions</p>
-        </div>
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold">{{ $activeBots }}</p>
-            <p class="text-xs text-text-muted">Active AI Bots</p>
-        </div>
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold">{{ $miningActive }}</p>
-            <p class="text-xs text-text-muted">Mining Contracts</p>
-        </div>
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold {{ $copyPnl >= 0 ? 'price-up' : 'price-down' }}">${{ number_format($copyPnl, 2) }}</p>
-            <p class="text-xs text-text-muted">Copy Trading P&amp;L</p>
-        </div>
-        <div class="glass-card p-4 text-center">
-            <p class="font-numeric text-xl font-bold">${{ number_format($cardSpend, 2) }}</p>
-            <p class="text-xs text-text-muted">Card Spend</p>
-        </div>
+        <x-stat-card icon="document" tone="muted" label="Open Orders" :value="$openOrders" />
+        <x-stat-card icon="bolt" tone="muted" label="Futures Positions" :value="$openFutures" />
+        <x-stat-card icon="cpu" tone="muted" label="Active AI Bots" :value="$activeBots" />
+        <x-stat-card icon="cube" tone="muted" label="Mining Contracts" :value="$miningActive" />
+        <x-stat-card icon="trending-up" :tone="$copyPnl >= 0 ? 'success' : 'danger'" label="Copy Trading P&amp;L" :value="'$'.number_format($copyPnl, 2)" />
+        <x-stat-card icon="credit-card" tone="muted" label="Card Spend" :value="'$'.number_format($cardSpend, 2)" />
     </div>
 
     <div class="grid gap-4 lg:grid-cols-3">
         <div class="glass-card p-5 lg:col-span-2">
-            <div class="mb-3 flex items-center justify-between">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h2 class="font-semibold">Top Gainers (24h)</h2>
                 <a href="/markets/top-gainers" class="text-xs text-brand hover:underline">View all</a>
             </div>
@@ -85,7 +51,7 @@
         </div>
 
         <div class="glass-card p-5">
-            <div class="mb-3 flex items-center justify-between">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h2 class="font-semibold">Watchlist</h2>
                 <a href="{{ url('/app/markets') }}" class="text-xs text-brand hover:underline">Manage</a>
             </div>
@@ -101,7 +67,7 @@
     </div>
 
     <div class="glass-card p-5">
-        <div class="mb-3 flex items-center justify-between">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 class="font-semibold">Latest News</h2>
             <a href="{{ url('/app/news') }}" class="text-xs text-brand hover:underline">View all</a>
         </div>

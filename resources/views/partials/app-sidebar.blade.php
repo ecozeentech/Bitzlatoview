@@ -59,7 +59,10 @@
                     <p class="mb-1 px-3 text-xs font-semibold uppercase tracking-wide text-text-muted/70">{{ $section }}</p>
                 @endif
                 @foreach ($items as [$label, $routeName, $prefix])
-                    <a href="{{ url($prefix) }}" @click="sidebarOpen = false" class="{{ request()->is($prefix.'*') ? 'nav-link-active' : 'nav-link' }} block">{{ $label }}</a>
+                    <a href="{{ url($prefix) }}" @click="sidebarOpen = false" class="{{ request()->is($prefix.'*') ? 'nav-link-active' : 'nav-link' }} flex items-center gap-3">
+                        <x-nav-icon :name="$label" />
+                        <span>{{ $label }}</span>
+                    </a>
                 @endforeach
             </div>
         @endforeach

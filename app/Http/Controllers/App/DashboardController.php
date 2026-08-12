@@ -64,4 +64,11 @@ class DashboardController extends Controller
             'news' => $news,
         ]);
     }
+
+    public function markNotificationsRead()
+    {
+        session(['notifications_last_seen_at' => now()]);
+
+        return response()->noContent();
+    }
 }

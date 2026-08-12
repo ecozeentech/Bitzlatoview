@@ -134,6 +134,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 
 Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/notifications/mark-read', [DashboardController::class, 'markNotificationsRead'])->name('notifications.mark-read');
     Route::get('/markets', [AppMarketController::class, 'index'])->name('markets');
     Route::post('/markets/{marketPair}/watchlist', [AppMarketController::class, 'toggleWatchlist'])->name('markets.watchlist');
 
@@ -463,6 +464,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
 
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/copy-trading-min-amount', [AdminSettingsController::class, 'updateCopyTradingMinAmount'])->name('settings.copy-trading-min-amount');
     Route::get('/settings/feature-flags', [AdminSettingsController::class, 'featureFlags'])->name('settings.feature-flags');
     Route::post('/settings/feature-flags/{flag}/toggle', [AdminSettingsController::class, 'toggleFlag'])->name('settings.feature-flags.toggle');
 
