@@ -73,6 +73,10 @@
         @apply border-b border-border/60 px-4 py-3 text-text-main;
     }
 
+    .data-table tbody tr:nth-child(even) td {
+        @apply bg-surface-2/30;
+    }
+
     .data-table tr:hover td {
         @apply bg-surface-2/60;
     }
@@ -94,10 +98,15 @@
     }
 
     .nav-link {
-        @apply rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition hover:bg-surface-2 hover:text-text-main;
+        @apply rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition hover:bg-surface-2 hover:text-text-main;
     }
 
     .nav-link-active {
-        @apply rounded-lg bg-surface-2 px-3 py-2 text-sm font-semibold text-brand;
+        @apply relative rounded-lg bg-brand/10 px-3 py-2.5 text-sm font-semibold text-brand;
+    }
+
+    .nav-link-active::before {
+        content: '';
+        @apply absolute inset-y-1 left-0 w-1 rounded-full bg-brand-gradient;
     }
 }

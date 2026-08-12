@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\App\CopyTradingController;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\FeatureFlag;
@@ -13,8 +14,9 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = SystemSetting::orderBy('key')->get();
+        $copyTradingMinAmount = CopyTradingController::globalMinimumAmount();
 
-        return view('admin.settings.index', compact('settings'));
+        return view('admin.settings.index', compact('settings', 'copyTradingMinAmount'));
     }
 
     public function update(Request $request)
@@ -29,6 +31,21 @@ class SettingsController extends Controller
         AuditLog::record(auth()->user(), 'system_setting.updated');
 
         return back()->with('success', 'Setting saved.');
+    }
+
+    public function updateCopyTradingMinAmount(Request $request)
+    {
+        $data = $request->validate([
+            'copy_trading_min_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        SystemSetting::updateOrCreate(
+            ['key' => CopyTradingController::minAmountSettingKey()],
+            ['value' => $data['copy_trading_min_amount'], 'type' => 'number']
+        );
+        AuditLog::record(auth()->user(), 'copy_trading.min_amount_updated');
+
+        return back()->with('success', 'Copy trading minimum investment amount updated.');
     }
 
     public function featureFlags()
