@@ -4,12 +4,16 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiBotAllocation;
+use App\Models\Asset;
 use App\Models\CopyAllocation;
 use App\Models\FuturesPosition;
 use App\Models\MarketPair;
 use App\Models\MiningContract;
 use App\Models\NewsArticle;
+use App\Models\NftCollection;
 use App\Models\Order;
+use App\Models\StockInstrument;
+use App\Models\TraderProfile;
 use App\Models\VirtualCard;
 use App\Models\WatchlistItem;
 use App\Services\PricingService;
@@ -44,15 +48,26 @@ class DashboardController extends Controller
 
         $watchlist = WatchlistItem::where('user_id', $user->id)->with('marketPair.baseAsset', 'marketPair.quote')->take(6)->get();
 
-        $markets = MarketPair::with(['baseAsset', 'quote'])->get();
+        $markets = MarketPair::where('is_active', true)->with(['baseAsset', 'quote'])->get();
         $topGainers = $markets->sortByDesc(fn ($m) => $m->quote?->change_24h_pct)->take(5);
+        $movers = $markets->sortByDesc(fn ($m) => abs($m->quote?->change_24h_pct ?? 0))->take(8)->values();
 
         $news = NewsArticle::latest('published_at')->take(4)->get();
+
+        $nftCollections = NftCollection::withCount('items')->orderByDesc('volume')->take(6)->get();
+        $stockInstruments = StockInstrument::where('is_active', true)->take(6)->get();
+
+        $topTraders = TraderProfile::where('status', 'active')
+            ->orderByDesc('is_featured')->orderByDesc('return_30d_pct')->take(6)->get();
+
+        $btcAsset = Asset::where('symbol', 'BTC')->first();
+        $btcPrice = $btcAsset ? $pricing->usdPrice($btcAsset) : 0;
 
         return view('app.dashboard', [
             'wallets' => $wallets,
             'walletTotals' => $walletTotals,
             'portfolioTotal' => $portfolioTotal,
+            'portfolioTotalBtc' => $btcPrice > 0 ? $portfolioTotal / $btcPrice : 0,
             'openOrders' => $openOrders,
             'openFutures' => $openFutures,
             'activeBots' => $activeBots,
@@ -60,8 +75,13 @@ class DashboardController extends Controller
             'copyPnl' => $copyPnl,
             'cardSpend' => $cardSpend,
             'watchlist' => $watchlist,
+            'markets' => $markets,
             'topGainers' => $topGainers,
+            'movers' => $movers,
             'news' => $news,
+            'nftCollections' => $nftCollections,
+            'stockInstruments' => $stockInstruments,
+            'topTraders' => $topTraders,
         ]);
     }
 
