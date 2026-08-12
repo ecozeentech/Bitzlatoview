@@ -26,7 +26,7 @@
     @if ($myAllocation)
         <div class="glass-card p-6">
             <h2 class="mb-2 font-semibold">Your Allocation</h2>
-            <p class="text-sm">Amount: ${{ number_format($myAllocation->amount, 2) }} · Status: <span class="pill-warning">{{ $myAllocation->status }}</span> · P&amp;L: <span class="{{ $myAllocation->pnl >= 0 ? 'price-up' : 'price-down' }}">${{ number_format($myAllocation->pnl, 2) }}</span></p>
+            <p class="text-sm">Amount: ${{ number_format($myAllocation->amount, 2) }} · Minimum investment: ${{ number_format($myAllocation->minimum_amount, 2) }} · Status: <span class="pill-warning">{{ $myAllocation->status }}</span> · P&amp;L: <span class="{{ $myAllocation->pnl >= 0 ? 'price-up' : 'price-down' }}">${{ number_format($myAllocation->pnl, 2) }}</span></p>
             <div class="mt-3 flex gap-2">
                 @if ($myAllocation->status === 'active')
                     <form method="POST" action="{{ route('app.copy-trading.pause', $myAllocation) }}">@csrf<button class="btn-outline text-sm">Pause</button></form>
@@ -42,6 +42,11 @@
             <form method="POST" action="{{ route('app.copy-trading.allocate', $trader) }}" class="grid gap-3 sm:grid-cols-2">
                 @csrf
                 <div><label class="label-field">Amount (USDT)</label><input type="number" step="0.01" name="amount" class="input-field" required></div>
+                <div>
+                    <label class="label-field">Minimum investment amount (USDT)</label>
+                    <input type="number" step="0.01" name="minimum_amount" value="{{ old('minimum_amount', $globalMinAmount) }}" min="{{ $globalMinAmount }}" class="input-field" required>
+                    <p class="mt-1 text-xs text-text-muted">The floor you're committing to for this trader. Must be at least ${{ number_format($globalMinAmount, 2) }} (platform minimum), and your Amount above must be at least this much.</p>
+                </div>
                 <div><label class="label-field">Copy ratio</label><input type="number" step="0.1" name="copy_ratio" value="1" class="input-field"></div>
                 <div><label class="label-field">Stop loss %</label><input type="number" step="0.1" name="stop_loss_pct" class="input-field"></div>
                 <div><label class="label-field">Take profit %</label><input type="number" step="0.1" name="take_profit_pct" class="input-field"></div>

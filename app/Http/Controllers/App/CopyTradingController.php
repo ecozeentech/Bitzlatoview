@@ -7,6 +7,7 @@ use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\CopiedTrade;
 use App\Models\CopyAllocation;
+use App\Models\SystemSetting;
 use App\Models\TraderProfile;
 use App\Models\WalletAccount;
 use App\Services\LedgerService;
@@ -19,6 +20,19 @@ class CopyTradingController extends Controller
 {
     /** Categories with a live CoinGecko-backed price we can settle real P&L against. */
     protected const LIVE_PRICED_CATEGORIES = ['crypto', 'futures'];
+
+    /** SystemSetting key admins use to configure the platform-wide floor (see /admin/settings). */
+    protected const MIN_AMOUNT_SETTING_KEY = 'copy_trading.min_amount';
+
+    public static function globalMinimumAmount(): float
+    {
+        return (float) SystemSetting::getValue(self::MIN_AMOUNT_SETTING_KEY, 100);
+    }
+
+    public static function minAmountSettingKey(): string
+    {
+        return self::MIN_AMOUNT_SETTING_KEY;
+    }
 
     public function index(Request $request)
     {
@@ -40,8 +54,9 @@ class CopyTradingController extends Controller
     {
         $trader->load('snapshots');
         $myAllocation = CopyAllocation::where('user_id', Auth::id())->where('trader_profile_id', $trader->id)->where('status', '!=', 'stopped')->first();
+        $globalMinAmount = self::globalMinimumAmount();
 
-        return view('app.copy-trading.show', compact('trader', 'myAllocation'));
+        return view('app.copy-trading.show', compact('trader', 'myAllocation', 'globalMinAmount'));
     }
 
     public function myCopies()
@@ -54,14 +69,22 @@ class CopyTradingController extends Controller
     public function allocate(Request $request, TraderProfile $trader, LedgerService $ledger, PricingService $pricing)
     {
         $user = Auth::user();
+        $globalMinAmount = self::globalMinimumAmount();
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'gt:0'],
+            'minimum_amount' => ['required', 'numeric', 'min:'.$globalMinAmount],
             'stop_loss_pct' => ['nullable', 'numeric', 'min:1', 'max:90'],
             'take_profit_pct' => ['nullable', 'numeric', 'min:1', 'max:500'],
             'max_position_size' => ['nullable', 'numeric', 'gt:0'],
             'copy_ratio' => ['nullable', 'numeric', 'min:0.1', 'max:5'],
+        ], [
+            'minimum_amount.min' => "The minimum investment amount must be at least \${$globalMinAmount} (the platform-wide floor set by the admin).",
         ]);
+
+        if ((float) $data['amount'] < (float) $data['minimum_amount']) {
+            return back()->withInput()->with('error', 'Your allocation amount must be at least your chosen minimum investment amount.');
+        }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_INVESTMENT]);
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
