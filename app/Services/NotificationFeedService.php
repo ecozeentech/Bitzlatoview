@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AdminMessage;
 use App\Models\Deposit;
 use App\Models\KycSubmission;
 use App\Models\P2PAppeal;
@@ -89,6 +90,17 @@ class NotificationFeedService
                     'text' => "Your P2P appeal on order #{$a->p2p_order_id} was resolved.",
                     'url' => "/app/p2p/orders/{$a->p2p_order_id}",
                     'at' => $a->updated_at,
+                ]);
+            });
+
+        AdminMessage::where('user_id', $user->id)
+            ->latest('created_at')->take($limit)
+            ->get()->each(function ($msg) use ($items) {
+                $items->push([
+                    'icon' => 'info',
+                    'text' => "{$msg->title}: {$msg->body}",
+                    'url' => '/app/dashboard',
+                    'at' => $msg->created_at,
                 ]);
             });
 

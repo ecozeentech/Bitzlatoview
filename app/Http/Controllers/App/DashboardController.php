@@ -89,6 +89,8 @@ class DashboardController extends Controller
     {
         session(['notifications_last_seen_at' => now()]);
 
+        \App\Models\AdminMessage::where('user_id', Auth::id())->whereNull('read_at')->update(['read_at' => now()]);
+
         return response()->noContent();
     }
 }
