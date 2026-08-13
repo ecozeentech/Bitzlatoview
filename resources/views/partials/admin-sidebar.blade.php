@@ -21,6 +21,7 @@
             ['P2P', 'admin/p2p'],
             ['Copy Trading', 'admin/copy-trading'],
             ['AI Bots', 'admin/ai-bots'],
+            ['Signals', 'admin/signals'],
             ['Mining', 'admin/mining'],
             ['Investments', 'admin/investments'],
             ['Stocks / Forex / Futures', 'admin/markets-extended'],
@@ -42,6 +43,7 @@
             ['Email Templates', 'admin/email/templates'],
             ['Email Campaigns', 'admin/email/campaigns'],
             ['Email Logs', 'admin/email/logs'],
+            ['Messages to Users', 'admin/messages'],
             ['Support Tickets', 'admin/support'],
         ],
         'System' => [

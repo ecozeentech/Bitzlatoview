@@ -16,7 +16,19 @@
     <div class="glass-card p-6">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <p class="text-xs uppercase tracking-wide text-text-muted">Available Balance</p>
+                <div class="flex items-center gap-2">
+                    <p class="text-xs uppercase tracking-wide text-text-muted">Available Balance</p>
+                    @php
+                        $kycStyles = [
+                            'approved' => ['success', 'Verified'],
+                            'submitted' => ['warning', 'Pending Review'],
+                            'rejected' => ['danger', 'Rejected'],
+                            'not_started' => ['muted', 'Not Started'],
+                        ];
+                        [$kycTone, $kycLabel] = $kycStyles[auth()->user()->kyc_status] ?? ['muted', str_replace('_', ' ', auth()->user()->kyc_status)];
+                    @endphp
+                    <a href="{{ url('/app/settings/kyc') }}" class="pill-{{ $kycTone }}">KYC: {{ $kycLabel }}</a>
+                </div>
                 <p class="mt-1 font-numeric text-3xl font-bold">${{ number_format($portfolioTotal, 2) }}</p>
                 <p class="font-numeric text-sm text-text-muted">{{ number_format($portfolioTotalBtc, 6) }} BTC</p>
             </div>
@@ -33,7 +45,32 @@
                 <span class="ml-auto shrink-0 text-brand">Enable →</span>
             </a>
         @endunless
+
+        {{-- Feature bar --}}
+        <div class="mt-4 flex gap-2 overflow-x-auto border-t border-border pt-4">
+            @foreach ([
+                ['Spot', 'presentation', 'app/spot'],
+                ['Futures', 'bolt', 'app/futures'],
+                ['Stocks', 'building', 'app/stocks'],
+                ['Copy Trade', 'trending-up', 'app/copy-trading'],
+                ['Signals', 'bolt', 'app/signals'],
+                ['AI Bots', 'cpu', 'app/ai-bots'],
+                ['Mining', 'cube', 'app/mining'],
+                ['Support', 'lifebuoy', 'app/support'],
+            ] as [$label, $icon, $prefix])
+                <a href="{{ url($prefix) }}" class="flex w-20 shrink-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-surface-2/40 p-3 text-center text-[11px] text-text-muted transition hover:border-brand/40 hover:text-text-main">
+                    <x-nav-icon :name="$icon" class="h-5 w-5" />
+                    {{ $label }}
+                </a>
+            @endforeach
+            <button type="button" @click="featuresOpen = true" class="flex w-20 shrink-0 flex-col items-center gap-1.5 rounded-xl border border-brand/30 bg-brand/5 p-3 text-center text-[11px] text-brand transition hover:bg-brand/10">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                More
+            </button>
+        </div>
     </div>
+
+    <x-features-popup />
 
     {{-- Secondary stats --}}
     <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -256,6 +293,7 @@
         return {
             search: '',
             assetFilter: 'all',
+            featuresOpen: false,
             allAssets: {!! $assetListJson->toJson() !!},
             get filteredAssets() {
                 let list = this.allAssets;

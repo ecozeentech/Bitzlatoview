@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdjustmentController as AdminAdjustmentController;
 use App\Http\Controllers\Admin\AiBotController as AdminAiBotController;
+use App\Http\Controllers\Admin\SignalController as AdminSignalController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\BillingController as AdminBillingController;
 use App\Http\Controllers\Admin\CmsController as AdminCmsController;
@@ -28,11 +29,13 @@ use App\Http\Controllers\Admin\RiskController as AdminRiskController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
+use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\SwapController as AdminSwapController;
 use App\Http\Controllers\Admin\TaxController as AdminTaxController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VirtualCardController as AdminVirtualCardController;
 use App\Http\Controllers\App\AiBotController;
+use App\Http\Controllers\App\SignalController;
 use App\Http\Controllers\App\BillingController;
 use App\Http\Controllers\App\BuySellController;
 use App\Http\Controllers\App\CopyTradingController;
@@ -61,6 +64,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\NewsController;
@@ -123,6 +127,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::post('/locale/{locale}', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -208,6 +214,16 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
         Route::post('/allocations/{allocation}/pause', [AiBotController::class, 'pause'])->name('pause');
         Route::post('/allocations/{allocation}/resume', [AiBotController::class, 'resume'])->name('resume');
         Route::post('/allocations/{allocation}/stop', [AiBotController::class, 'stop'])->name('stop');
+    });
+
+    // Signals
+    Route::prefix('signals')->name('signals.')->group(function () {
+        Route::get('/', [SignalController::class, 'index'])->name('index');
+        Route::get('/{package}', [SignalController::class, 'show'])->name('show');
+        Route::post('/{package}/subscribe', [SignalController::class, 'subscribe'])->name('subscribe');
+        Route::post('/subscriptions/{subscription}/pause', [SignalController::class, 'pause'])->name('pause');
+        Route::post('/subscriptions/{subscription}/resume', [SignalController::class, 'resume'])->name('resume');
+        Route::post('/subscriptions/{subscription}/stop', [SignalController::class, 'stop'])->name('stop');
     });
 
     // Mining
@@ -388,6 +404,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/ai-bots', [AdminAiBotController::class, 'store'])->name('ai-bots.store');
     Route::patch('/ai-bots/{bot}', [AdminAiBotController::class, 'update'])->name('ai-bots.update');
 
+    Route::get('/signals', [AdminSignalController::class, 'index'])->name('signals.index');
+    Route::post('/signals', [AdminSignalController::class, 'store'])->name('signals.store');
+    Route::put('/signals/{package}', [AdminSignalController::class, 'update'])->name('signals.update');
+    Route::post('/signals/{package}/toggle', [AdminSignalController::class, 'toggle'])->name('signals.toggle');
+    Route::delete('/signals/{package}', [AdminSignalController::class, 'destroy'])->name('signals.destroy');
+    Route::post('/signals/subscriptions/{subscription}/adjust', [AdminSignalController::class, 'adjustReturn'])->name('signals.subscriptions.adjust');
+
     Route::get('/mining', [AdminMiningController::class, 'index'])->name('mining.index');
     Route::post('/mining/packages', [AdminMiningController::class, 'store'])->name('mining.store');
     Route::patch('/mining/packages/{package}', [AdminMiningController::class, 'update'])->name('mining.update');
@@ -456,6 +479,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/email/campaigns/{campaign}/send-test', [AdminEmailController::class, 'sendTest'])->name('email.campaigns.send-test');
     Route::post('/email/campaigns/{campaign}/send', [AdminEmailController::class, 'send'])->name('email.campaigns.send');
     Route::get('/email/logs', [AdminEmailController::class, 'logs'])->name('email.logs');
+
+    Route::get('/messages', [AdminMessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages', [AdminMessageController::class, 'store'])->name('messages.store');
 
     Route::get('/support', [AdminSupportController::class, 'index'])->name('support.index');
     Route::get('/support/{ticket}', [AdminSupportController::class, 'show'])->name('support.show');

@@ -73,6 +73,7 @@
         </div>
 
         <div class="hidden items-center gap-3 lg:flex">
+            <x-language-switcher />
             @auth
                 <a href="{{ route('dashboard') }}" class="btn-outline text-sm">Dashboard</a>
             @else

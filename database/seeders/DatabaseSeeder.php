@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             P2PSeeder::class,
             TraderSeeder::class,
             AiBotSeeder::class,
+            SignalSeeder::class,
             MiningSeeder::class,
             InvestmentSeeder::class,
             StockForexFuturesSeeder::class,
