@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" class="dark">
 <head>
     @include('partials.head')
 </head>
 <body class="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-text-main">
+    <div class="fixed right-4 top-4">
+        <x-language-switcher />
+    </div>
     <div class="w-full max-w-md">
         <div class="mb-8 text-center">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">

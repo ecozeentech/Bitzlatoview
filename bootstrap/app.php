@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureKycApproved;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'kyc.approved' => EnsureKycApproved::class,
+        ]);
+        $middleware->web(append: [
+            SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

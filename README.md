@@ -169,8 +169,20 @@ Every trading/product module has a dedicated admin section with real create/edit
 | Payment methods, deposits, withdrawals | `/admin/payment-methods`, `/admin/deposits`, `/admin/withdrawals` | Configure manual payment rails, review proof-of-payment, two-step withdrawal approval |
 | KYC | `/admin/kyc` | Review uploaded documents, approve/reject with reason |
 | Copy trading, AI bots, mining | `/admin/copy-trading`, `/admin/ai-bots`, `/admin/mining` | Create/edit products, performance figures, risk disclosures |
+| Signals | `/admin/signals` | Create/edit/delete/pause packages (risk level, min/max investment, duration, fee, tracked asset); view all user subscriptions; post an audited ledger correction to a settled subscription's P&L |
+| Messages to users | `/admin/messages` | Send a message to one user (by email) or broadcast to all — appears in the recipient's notification bell |
 | Emails, CMS, tax | `/admin/email/*`, `/admin/cms`, `/admin/blog`, `/admin/news`, `/admin/faq`, `/admin/tax` | Edit templates/campaigns, manage pages/posts/FAQs, review tax reports |
 | Feature flags | `/admin/settings/feature-flags` | Enable/disable higher-risk modules (virtual cards, NFTs, etc.) without a deploy |
+
+### Signals module
+
+`/app/signals` is a packaged strategy product that works exactly like AI Bots and Copy Trading: a user subscribes an amount from their Investment Wallet to a package (`App\Models\SignalPackage`), and P&L is settled on stop against the package's `tracked_asset_symbol`'s **real** live price movement (via `App\Services\PricingService`), not a random number or a fabricated "AI-generated" outcome — same approach already used for AI Bots/Copy Trading. Admins manage packages (risk level, min/max investment, duration/lock period, fee %, tracked asset, active status) at `/admin/signals`, and can post an audited, ledger-backed correction to a settled subscription's P&L if needed (never a silent field edit — it always posts a real, logged ledger transaction for the delta).
+
+### Localization (in progress)
+
+A real (not decorative) language switcher is wired up via `App\Http\Middleware\SetLocale` and `lang/{en,es,fr,ar,zh}/common.php` — switching persists to the logged-in user's `locale` column (or session for guests) and actually changes `App::getLocale()`, including `dir="rtl"` for Arabic. **This currently covers navigation, the topbar, and a handful of common UI strings — it does not yet cover every screen in the app.** Translating the full application is a substantial follow-on effort (100+ view files); the `common.php` files list every key currently wired up as a starting point to extend from.
+
+Legal and risk-disclosure text (terms, risk disclosure page, KYC legal copy, risk banners) is **intentionally left English-only** regardless of the selected UI language until a qualified translator/legal reviewer signs off on each language — an incorrect translation of "no guaranteed returns" or similar language is a compliance risk, not just a UX nitpick. Do not extend translations to that content without that review.
 
 ## Feature flags
 

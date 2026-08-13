@@ -8,7 +8,7 @@
         </a>
         <div class="hidden items-center rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-text-muted md:flex">
             <svg class="mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/></svg>
-            <input type="text" placeholder="Search markets, orders, help..." class="w-48 bg-transparent outline-none placeholder:text-text-muted">
+            <input type="text" placeholder="{{ __('common.search_placeholder') }}" class="w-48 bg-transparent outline-none placeholder:text-text-muted">
         </div>
     </div>
 
@@ -20,18 +20,20 @@
             <p class="font-numeric text-sm font-semibold leading-tight">${{ number_format($topbarBalanceUsd ?? 0, 2) }}</p>
             <p class="font-numeric text-[11px] leading-tight text-text-muted">{{ number_format($topbarBalanceBtc ?? 0, 6) }} BTC</p>
         </div>
-        <a href="{{ url('/app/funding/deposit') }}" class="btn-brand hidden text-sm sm:inline-flex">Deposit</a>
-        <a href="{{ url('/app/funding/withdraw') }}" class="btn-outline hidden text-sm md:inline-flex">Withdraw</a>
+        <a href="{{ url('/app/funding/deposit') }}" class="btn-brand hidden text-sm sm:inline-flex">{{ __('common.deposit') }}</a>
+        <a href="{{ url('/app/funding/withdraw') }}" class="btn-outline hidden text-sm md:inline-flex">{{ __('common.withdraw') }}</a>
+
+        <x-language-switcher />
 
         <div class="relative" x-data="{ open: false }" x-init="$watch('open', (value) => { if (value) { fetch('{{ route('app.notifications.mark-read') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content } }); } })">
-            <button @click="open = !open" class="relative rounded-lg border border-border bg-surface-2 p-2 text-text-muted hover:text-text-main" aria-label="Notifications">
+            <button @click="open = !open" class="relative rounded-lg border border-border bg-surface-2 p-2 text-text-muted hover:text-text-main" aria-label="{{ __('common.notifications') }}">
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.85 23.85 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
                 @if (($unreadNotifications ?? 0) > 0)
                     <span class="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{{ min($unreadNotifications, 9) }}{{ $unreadNotifications > 9 ? '+' : '' }}</span>
                 @endif
             </button>
             <div x-show="open" @click.outside="open = false" x-transition x-cloak class="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-xl border border-border bg-surface p-2 shadow-glass">
-                <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">Recent Activity</p>
+                <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">{{ __('common.recent_activity') }}</p>
                 <div class="max-h-80 overflow-y-auto">
                     @forelse (($notifications ?? []) as $n)
                         <a href="{{ url($n['url']) }}" class="flex items-start gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2">
@@ -42,7 +44,7 @@
                             </span>
                         </a>
                     @empty
-                        <p class="px-3 py-4 text-center text-sm text-text-muted">No recent activity yet.</p>
+                        <p class="px-3 py-4 text-center text-sm text-text-muted">{{ __('common.no_recent_activity') }}</p>
                     @endforelse
                 </div>
             </div>
@@ -54,15 +56,15 @@
                 <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
             </button>
             <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface p-2 shadow-glass">
-                <a href="{{ url('/app/settings/profile') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">Profile Settings</a>
-                <a href="{{ url('/app/settings/security') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">Security</a>
-                <a href="{{ url('/app/settings/kyc') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">KYC Verification</a>
+                <a href="{{ url('/app/settings/profile') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">{{ __('common.profile_settings') }}</a>
+                <a href="{{ url('/app/settings/security') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">{{ __('common.security') }}</a>
+                <a href="{{ url('/app/settings/kyc') }}" class="block rounded-lg px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text-main">{{ __('common.kyc_verification') }}</a>
                 @if (auth()->user()->isAdmin())
-                    <a href="{{ url('/admin') }}" class="block rounded-lg px-3 py-2 text-sm text-brand hover:bg-surface-2">Admin Dashboard</a>
+                    <a href="{{ url('/admin') }}" class="block rounded-lg px-3 py-2 text-sm text-brand hover:bg-surface-2">{{ __('common.admin_dashboard') }}</a>
                 @endif
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-surface-2">Log Out</button>
+                    <button type="submit" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-surface-2">{{ __('common.log_out') }}</button>
                 </form>
             </div>
         </div>
