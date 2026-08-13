@@ -44,6 +44,7 @@
         'MetaTrader 5' => 'desktop',
         'P2P' => 'users',
         'Copy Trading' => 'trending-up',
+        'Signals' => 'bolt',
         'AI Bots' => 'cpu',
         'Mining' => 'cube',
         'Investments' => 'banknotes',
