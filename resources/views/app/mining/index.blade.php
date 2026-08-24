@@ -18,6 +18,9 @@
                 <div class="flex items-center gap-2">
                     <x-asset-icon :symbol="$package->asset->symbol" />
                     <h2 class="font-semibold">{{ $package->name }}</h2>
+                    @if ($package->is_sold_out)
+                        <span class="pill-warning ml-auto">Sold Out</span>
+                    @endif
                 </div>
                 <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-text-muted">
                     <div>Hashrate: <span class="text-text-main">{{ $package->hashrate_th }} TH/s</span></div>
@@ -26,14 +29,18 @@
                     <div>Daily est.: <span class="text-text-main">{{ $package->estimated_daily_reward_pct }}%</span></div>
                 </div>
                 <p class="mt-2 font-numeric text-lg font-bold">${{ number_format($package->price, 0) }}</p>
-                <form method="POST" action="{{ route('app.mining.purchase', $package) }}" class="mt-3 space-y-2">
-                    @csrf
-                    <select name="reward_destination" class="input-field text-sm">
-                        <option value="investment">Reward → Investment Wallet</option>
-                        <option value="primary">Reward → Primary Wallet</option>
-                    </select>
-                    <button class="btn-brand w-full text-sm">Purchase Contract</button>
-                </form>
+                @if ($package->is_sold_out)
+                    <p class="mt-3 text-center text-xs text-text-muted">Not accepting new contracts right now.</p>
+                @else
+                    <form method="POST" action="{{ route('app.mining.purchase', $package) }}" class="mt-3 space-y-2">
+                        @csrf
+                        <select name="reward_destination" class="input-field text-sm">
+                            <option value="investment">Reward → Investment Wallet</option>
+                            <option value="primary">Reward → Primary Wallet</option>
+                        </select>
+                        <button class="btn-brand w-full text-sm">Purchase Contract</button>
+                    </form>
+                @endif
             </div>
         @endforeach
     </div>

@@ -21,7 +21,7 @@
 
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
-            <thead><tr><th>Name</th><th>Asset</th><th>Hashrate</th><th>Term</th><th>Contracts</th><th>Published</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Asset</th><th>Hashrate</th><th>Term</th><th>Contracts</th><th>Published</th><th>Availability</th><th></th></tr></thead>
             <tbody>
                 @foreach ($packages as $p)
                     <tr>
@@ -31,11 +31,16 @@
                         <td>{{ $p->term_days }}d</td>
                         <td class="font-numeric">{{ $p->contracts_count }}</td>
                         <td><span class="pill-{{ $p->is_published ? 'success' : 'muted' }}">{{ $p->is_published ? 'Published' : 'Hidden' }}</span></td>
-                        <td>
-                            <form method="POST" action="{{ route('admin.mining.update', $p) }}">
+                        <td><span class="pill-{{ $p->is_sold_out ? 'warning' : 'success' }}">{{ $p->is_sold_out ? 'Sold Out' : 'Available' }}</span></td>
+                        <td class="space-x-2 whitespace-nowrap">
+                            <form method="POST" action="{{ route('admin.mining.update', $p) }}" class="inline">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="is_published" value="{{ $p->is_published ? 0 : 1 }}">
                                 <button class="text-xs text-brand hover:underline">{{ $p->is_published ? 'Unpublish' : 'Publish' }}</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.mining.toggle-availability', $p) }}" class="inline">
+                                @csrf
+                                <button class="text-xs text-brand hover:underline">{{ $p->is_sold_out ? 'Mark Available' : 'Mark Sold Out' }}</button>
                             </form>
                         </td>
                     </tr>
