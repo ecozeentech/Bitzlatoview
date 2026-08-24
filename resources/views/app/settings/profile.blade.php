@@ -5,6 +5,25 @@
     <h1 class="text-2xl font-bold">Profile Settings</h1>
 
     <div class="glass-card p-6">
+        <h2 class="mb-4 text-lg font-medium">Profile Photo</h2>
+        <div class="flex flex-wrap items-center gap-4">
+            <x-user-avatar :user="$user" size="h-16 w-16 text-xl" />
+            <form method="POST" action="{{ route('app.settings.profile.avatar.update') }}" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+                @csrf
+                <input type="file" name="avatar" accept="image/*" class="input-field text-xs" required>
+                <button class="btn-outline text-xs">Upload</button>
+            </form>
+            @if ($user->avatar_path)
+                <form method="POST" action="{{ route('app.settings.profile.avatar.remove') }}">
+                    @csrf @method('DELETE')
+                    <button class="text-xs text-danger hover:underline">Remove</button>
+                </form>
+            @endif
+        </div>
+        <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+    </div>
+
+    <div class="glass-card p-6">
         @include('profile.partials.update-profile-information-form')
     </div>
 

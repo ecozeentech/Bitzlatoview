@@ -10,6 +10,7 @@ use App\Models\DeviceSession;
 use App\Services\TotpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SettingsController extends Controller
@@ -34,6 +35,37 @@ class SettingsController extends Controller
         AuditLog::record($user, 'profile.updated');
 
         return back()->with('success', 'Profile updated.');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'],
+        ]);
+
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        $user->forceFill(['avatar_path' => $request->file('avatar')->store('avatars', 'public')])->save();
+        AuditLog::record($user, 'profile.avatar_updated');
+
+        return back()->with('success', 'Profile photo updated.');
+    }
+
+    public function removeAvatar()
+    {
+        $user = Auth::user();
+
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+            $user->forceFill(['avatar_path' => null])->save();
+            AuditLog::record($user, 'profile.avatar_removed');
+        }
+
+        return back()->with('success', 'Profile photo removed.');
     }
 
     public function security()

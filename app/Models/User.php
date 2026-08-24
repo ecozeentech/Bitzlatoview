@@ -35,6 +35,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar_path ? asset('storage/'.$this->avatar_path) : null;
+    }
+
     public function isAdmin(): bool
     {
         return in_array($this->role, ['admin', 'compliance', 'support']);
