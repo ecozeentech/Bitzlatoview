@@ -20,7 +20,11 @@
                     <div class="text-text-muted">Risk: {{ $bot->risk_score }}/100</div>
                     <div class="text-text-muted">Min: ${{ number_format($bot->min_allocation, 0) }}</div>
                 </div>
-                <a href="{{ route('app.ai-bots.show', $bot) }}" class="btn-brand mt-4 block text-center text-sm">View &amp; Allocate</a>
+                @if ($bot->status === 'sold_out')
+                    <span class="pill-warning mt-4 block text-center">Sold Out</span>
+                @else
+                    <a href="{{ route('app.ai-bots.show', $bot) }}" class="btn-brand mt-4 block text-center text-sm">View &amp; Allocate</a>
+                @endif
             </div>
         @endforeach
     </div>

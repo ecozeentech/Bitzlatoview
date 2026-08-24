@@ -25,7 +25,7 @@ class AiBotController extends Controller
 
     public function marketplace()
     {
-        $bots = AiBot::where('status', 'active')->get();
+        $bots = AiBot::whereIn('status', ['active', 'sold_out'])->get();
 
         return view('app.ai-bots.marketplace', compact('bots'));
     }
@@ -47,6 +47,8 @@ class AiBotController extends Controller
     public function allocate(Request $request, AiBot $bot, LedgerService $ledger, PricingService $pricing, TransactionalMailService $mailer)
     {
         $user = Auth::user();
+
+        abort_unless($bot->status === 'active', 422, 'This bot is not currently accepting new allocations.');
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:'.$bot->min_allocation],

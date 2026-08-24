@@ -17,7 +17,7 @@ class SignalController extends Controller
 {
     public function index()
     {
-        $packages = SignalPackage::where('status', 'active')->get();
+        $packages = SignalPackage::whereIn('status', ['active', 'sold_out'])->get();
         $mySubscriptions = SignalSubscription::where('user_id', Auth::id())->with('package')->latest()->get();
 
         return view('app.signals.index', compact('packages', 'mySubscriptions'));

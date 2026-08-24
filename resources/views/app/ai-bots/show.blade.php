@@ -32,6 +32,11 @@
                 <form method="POST" action="{{ route('app.ai-bots.stop', $myAllocation) }}">@csrf<button class="text-sm text-danger hover:underline">Stop &amp; Settle</button></form>
             </div>
         </div>
+    @elseif ($bot->status !== 'active')
+        <div class="glass-card p-6 text-center">
+            <span class="pill-warning">{{ $bot->status === 'sold_out' ? 'Sold Out' : ucfirst($bot->status) }}</span>
+            <p class="mt-2 text-sm text-text-muted">This bot isn't accepting new allocations right now. Check back later.</p>
+        </div>
     @else
         <div class="glass-card p-6">
             <h2 class="mb-3 font-semibold">Allocate from Investment Wallet</h2>

@@ -40,6 +40,7 @@
                         <td><span class="pill-{{ $p->status === 'active' ? 'success' : 'muted' }}">{{ $p->status }}</span></td>
                         <td class="flex gap-2">
                             <button type="button" @click="edit = edit === {{ $p->id }} ? null : {{ $p->id }}" class="text-xs text-brand hover:underline">Edit</button>
+                            <form method="POST" action="{{ route('admin.signals.toggle-availability', $p) }}">@csrf<button class="text-xs text-brand hover:underline">{{ $p->status === 'sold_out' ? 'Mark Available' : 'Mark Sold Out' }}</button></form>
                             <form method="POST" action="{{ route('admin.signals.toggle', $p) }}">@csrf<button class="text-xs text-text-muted hover:underline">{{ $p->status === 'active' ? 'Pause' : 'Activate' }}</button></form>
                             @if ($p->subscriptions_count === 0)
                                 <form method="POST" action="{{ route('admin.signals.destroy', $p) }}" onsubmit="return confirm('Delete this package?')">@csrf @method('DELETE')<button class="text-xs text-danger hover:underline">Delete</button></form>
