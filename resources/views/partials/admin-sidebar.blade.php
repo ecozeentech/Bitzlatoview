@@ -50,6 +50,7 @@
             ['Feature Flags', 'admin/settings/feature-flags'],
             ['Platform Settings', 'admin/settings'],
             ['Branding', 'admin/settings/branding'],
+            ['Live Chat (Tawk.to)', 'admin/settings/live-chat'],
         ],
     ];
 @endphp

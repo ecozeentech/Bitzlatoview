@@ -32,5 +32,6 @@
     </div>
 
     @include('partials.app-bottom-nav')
+    @include('partials.tawk-widget')
 </body>
 </html>
