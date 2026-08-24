@@ -66,7 +66,7 @@
         </form>
     </div>
 
-    <div class="glass-card overflow-x-auto">
+    <div class="glass-card overflow-x-auto" x-data="{ edit: null }">
         <table class="data-table">
             <thead><tr><th>Name</th><th>Type</th><th>Currency</th><th>Limits</th><th>Status</th><th></th></tr></thead>
             <tbody>
@@ -83,8 +83,69 @@
                         <td class="text-text-muted">{{ number_format($method->min_amount, 2) }}{{ $method->max_amount ? ' – '.number_format($method->max_amount, 2) : '+' }}</td>
                         <td><span class="pill-{{ $method->is_active ? 'success' : 'muted' }}">{{ $method->is_active ? 'Active' : 'Inactive' }}</span></td>
                         <td class="space-x-2">
+                            <button type="button" @click="edit = edit === {{ $method->id }} ? null : {{ $method->id }}" class="text-xs text-brand hover:underline">Edit</button>
                             <form method="POST" action="{{ route('admin.payment-methods.toggle', $method) }}" class="inline">@csrf<button class="text-xs text-brand hover:underline">{{ $method->is_active ? 'Deactivate' : 'Activate' }}</button></form>
                             <form method="POST" action="{{ route('admin.payment-methods.destroy', $method) }}" class="inline">@csrf @method('DELETE')<button class="text-xs text-danger hover:underline">Delete</button></form>
+                        </td>
+                    </tr>
+                    <tr x-show="edit === {{ $method->id }}" x-cloak>
+                        <td colspan="6" class="bg-surface-2/40 p-4">
+                            <form method="POST" action="{{ route('admin.payment-methods.update', $method) }}" enctype="multipart/form-data" class="grid gap-3 sm:grid-cols-2">
+                                @csrf
+                                @method('PATCH')
+                                <div>
+                                    <label class="label-field">Display name</label>
+                                    <input type="text" name="name" class="input-field" value="{{ $method->name }}" required>
+                                </div>
+                                <div>
+                                    <label class="label-field">Type</label>
+                                    <select name="type" class="input-field">
+                                        @foreach (['crypto', 'bank_transfer', 'cashapp', 'venmo', 'paypal', 'other'] as $type)
+                                            <option value="{{ $type }}" @selected($method->type === $type)>{{ str_replace('_', ' ', ucfirst($type)) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label-field">Currency / asset</label>
+                                    <input type="text" name="currency" class="input-field" value="{{ $method->currency }}" required>
+                                </div>
+                                <div>
+                                    <label class="label-field">Network (crypto only)</label>
+                                    <input type="text" name="network" class="input-field" value="{{ $method->network }}">
+                                </div>
+                                <div>
+                                    <label class="label-field">Address / account number / handle</label>
+                                    <input type="text" name="address" class="input-field" value="{{ $method->address }}">
+                                </div>
+                                <div>
+                                    <label class="label-field">Memo / reference tag</label>
+                                    <input type="text" name="memo" class="input-field" value="{{ $method->memo }}">
+                                </div>
+                                <div>
+                                    <label class="label-field">Minimum amount</label>
+                                    <input type="number" step="0.01" name="min_amount" class="input-field" value="{{ $method->min_amount }}" required>
+                                </div>
+                                <div>
+                                    <label class="label-field">Maximum amount (optional)</label>
+                                    <input type="number" step="0.01" name="max_amount" class="input-field" value="{{ $method->max_amount }}">
+                                </div>
+                                <div>
+                                    <label class="label-field">Replace QR code image (optional)</label>
+                                    <input type="file" name="qr_code" accept="image/*" class="input-field">
+                                    @if ($method->qr_code_path)
+                                        <p class="mt-1 text-xs text-text-muted">Current: <img src="{{ asset('storage/'.$method->qr_code_path) }}" class="mt-1 inline h-8 w-8 rounded border border-border align-middle"></p>
+                                    @endif
+                                </div>
+                                <div>
+                                    <label class="label-field">Sort order</label>
+                                    <input type="number" name="sort_order" class="input-field" value="{{ $method->sort_order }}">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="label-field">Instructions shown to the depositor</label>
+                                    <textarea name="instructions" class="input-field" rows="3" required>{{ $method->instructions }}</textarea>
+                                </div>
+                                <button class="btn-brand sm:col-span-2">Save Changes</button>
+                            </form>
                         </td>
                     </tr>
                 @empty

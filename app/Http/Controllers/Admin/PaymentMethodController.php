@@ -24,6 +24,7 @@ class PaymentMethodController extends Controller
         if ($request->hasFile('qr_code')) {
             $data['qr_code_path'] = $request->file('qr_code')->store('payment-method-qr', 'public');
         }
+        unset($data['qr_code']);
 
         $method = PaymentMethod::create($data);
 
@@ -42,6 +43,7 @@ class PaymentMethodController extends Controller
             }
             $data['qr_code_path'] = $request->file('qr_code')->store('payment-method-qr', 'public');
         }
+        unset($data['qr_code']);
 
         $before = $paymentMethod->only(array_keys($data));
         $paymentMethod->update($data);
