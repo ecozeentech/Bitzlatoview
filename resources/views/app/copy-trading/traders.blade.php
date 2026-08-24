@@ -27,9 +27,13 @@
                     <div>30d return: <x-price-change :value="$trader->return_30d_pct" /></div>
                     <div>90d return: <x-price-change :value="$trader->return_90d_pct" /></div>
                     <div class="text-text-muted">Max drawdown: {{ $trader->max_drawdown_pct }}%</div>
-                    <div class="text-text-muted">Followers: {{ number_format($trader->followers_count) }}</div>
+                    <div class="text-text-muted">Min copy: ${{ number_format($trader->min_copy_amount, 0) }}</div>
                 </div>
-                <a href="{{ route('app.copy-trading.traders.show', $trader) }}" class="btn-brand mt-4 block text-center text-sm">View Profile</a>
+                @if ($trader->status === 'sold_out')
+                    <span class="pill-warning mt-4 block text-center">Sold Out</span>
+                @else
+                    <a href="{{ route('app.copy-trading.traders.show', $trader) }}" class="btn-brand mt-4 block text-center text-sm">View Profile</a>
+                @endif
             </div>
         @endforeach
     </div>
