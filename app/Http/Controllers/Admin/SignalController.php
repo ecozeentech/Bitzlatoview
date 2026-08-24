@@ -50,6 +50,18 @@ class SignalController extends Controller
         return back()->with('success', "Signal package is now {$package->status}.");
     }
 
+    public function toggleAvailability(SignalPackage $package)
+    {
+        $newStatus = $package->status === 'sold_out' ? 'active' : 'sold_out';
+        $package->update(['status' => $newStatus]);
+
+        AuditLog::record(auth()->user(), 'signal_package.availability_toggled', SignalPackage::class, $package->id, null, ['status' => $newStatus]);
+
+        return back()->with('success', $newStatus === 'sold_out'
+            ? "{$package->name} is now marked Sold Out — no new subscriptions until you mark it available again."
+            : "{$package->name} is available again.");
+    }
+
     public function destroy(SignalPackage $package)
     {
         if ($package->subscriptions()->exists()) {
@@ -128,7 +140,7 @@ class SignalController extends Controller
             'duration_days' => ['required', 'integer', 'min:0'],
             'fee_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'tracked_asset_symbol' => ['required', 'string', 'max:15'],
-            'status' => ['required', 'in:active,paused,retired'],
+            'status' => ['required', 'in:active,paused,retired,sold_out'],
         ]);
     }
 }

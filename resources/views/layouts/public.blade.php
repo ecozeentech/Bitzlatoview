@@ -11,5 +11,6 @@
     </main>
 
     @include('partials.public-footer')
+    @include('partials.tawk-widget')
 </body>
 </html>

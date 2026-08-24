@@ -10,6 +10,11 @@ class CopyAllocation extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return ['unlocks_at' => 'datetime'];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

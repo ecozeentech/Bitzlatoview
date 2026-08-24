@@ -9,6 +9,9 @@
         @forelse ($packages as $package)
             <div class="glass-card p-5">
                 <span class="pill-{{ $package->risk_level === 'high' ? 'danger' : ($package->risk_level === 'low' ? 'success' : 'info') }}">{{ ucfirst($package->risk_level) }} risk</span>
+                @if ($package->status === 'sold_out')
+                    <span class="pill-warning">Sold Out</span>
+                @endif
                 <h2 class="mt-2 font-semibold">{{ $package->name }}</h2>
                 <p class="mt-1 text-xs text-text-muted">{{ \Illuminate\Support\Str::limit($package->description, 90) }}</p>
                 <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -17,7 +20,11 @@
                     <div class="text-text-muted">Min: ${{ number_format($package->min_investment, 0) }}</div>
                     <div class="text-text-muted">Tracks: {{ $package->tracked_asset_symbol }}</div>
                 </div>
-                <a href="{{ route('app.signals.show', $package) }}" class="btn-brand mt-4 block text-center text-sm">View &amp; Subscribe</a>
+                @if ($package->status === 'sold_out')
+                    <span class="mt-4 block text-center text-xs text-text-muted">Not accepting new subscriptions</span>
+                @else
+                    <a href="{{ route('app.signals.show', $package) }}" class="btn-brand mt-4 block text-center text-sm">View &amp; Subscribe</a>
+                @endif
             </div>
         @empty
             <p class="text-sm text-text-muted">No signal packages available right now.</p>

@@ -80,8 +80,8 @@ class TaxController extends Controller
     {
         abort_unless($report->user_id === Auth::id(), 403);
 
-        $csv = "Year,Country,Cost Basis Method,Realized Gain,Unrealized Gain,Income,Fees Paid\n";
-        $csv .= "{$report->year},{$report->country},{$report->cost_basis_method},{$report->realized_gain},{$report->unrealized_gain},{$report->income_total},{$report->fees_paid}\n";
+        $csv = "Year,Country,Cost Basis Method,Realized Gain,Unrealized Gain,Income,Fees Paid,Tax Rate %,Estimated Tax Owed\n";
+        $csv .= "{$report->year},{$report->country},{$report->cost_basis_method},{$report->realized_gain},{$report->unrealized_gain},{$report->income_total},{$report->fees_paid},{$report->tax_rate_pct},{$report->estimated_tax_owed}\n";
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',

@@ -49,6 +49,8 @@ class MiningController extends Controller
     {
         $user = Auth::user();
 
+        abort_unless(! $package->is_sold_out, 422, 'This mining package is currently sold out.');
+
         $data = $request->validate([
             'multiplier' => ['nullable', 'integer', 'min:1', 'max:10'],
             'reward_destination' => ['required', 'in:primary,investment'],

@@ -12,6 +12,7 @@
     <label class="label-field">Status</label>
     <select name="status" class="input-field" required>
         <option value="active" @selected(old('status', $package?->status ?? 'active') === 'active')>Active</option>
+        <option value="sold_out" @selected(old('status', $package?->status) === 'sold_out')>Sold Out</option>
         <option value="paused" @selected(old('status', $package?->status) === 'paused')>Paused</option>
         <option value="retired" @selected(old('status', $package?->status) === 'retired')>Retired</option>
     </select>

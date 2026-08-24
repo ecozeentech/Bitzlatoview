@@ -12,7 +12,7 @@ class MiningPackage extends Model
 
     protected function casts(): array
     {
-        return ['is_published' => 'boolean'];
+        return ['is_published' => 'boolean', 'is_sold_out' => 'boolean'];
     }
 
     public function asset(): BelongsTo

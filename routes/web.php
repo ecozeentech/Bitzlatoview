@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodCont
 use App\Http\Controllers\Admin\RiskController as AdminRiskController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
+use App\Http\Controllers\Admin\LiveChatSettingController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\SwapController as AdminSwapController;
@@ -313,6 +314,8 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'verified'])->group(func
         Route::get('/', [SettingsController::class, 'profile'])->name('index');
         Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
         Route::patch('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/avatar', [SettingsController::class, 'updateAvatar'])->name('profile.avatar.update');
+        Route::delete('/profile/avatar', [SettingsController::class, 'removeAvatar'])->name('profile.avatar.remove');
         Route::get('/security', [SettingsController::class, 'security'])->name('security');
         Route::post('/security/2fa/enable', [SettingsController::class, 'enable2fa'])->name('2fa.enable');
         Route::post('/security/2fa/disable', [SettingsController::class, 'disable2fa'])->name('2fa.disable');
@@ -399,21 +402,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::get('/copy-trading', [AdminCopyTradingController::class, 'index'])->name('copy-trading.index');
     Route::post('/copy-trading/traders', [AdminCopyTradingController::class, 'store'])->name('copy-trading.store');
     Route::patch('/copy-trading/traders/{trader}', [AdminCopyTradingController::class, 'update'])->name('copy-trading.update');
+    Route::post('/copy-trading/traders/{trader}/toggle-availability', [AdminCopyTradingController::class, 'toggleAvailability'])->name('copy-trading.toggle-availability');
+    Route::patch('/copy-trading/trades/{trade}', [AdminCopyTradingController::class, 'updateTrade'])->name('copy-trading.trades.update');
+    Route::post('/copy-trading/allocations/{allocation}/adjust-pnl', [AdminCopyTradingController::class, 'adjustAllocationPnl'])->name('copy-trading.allocations.adjust-pnl');
 
     Route::get('/ai-bots', [AdminAiBotController::class, 'index'])->name('ai-bots.index');
     Route::post('/ai-bots', [AdminAiBotController::class, 'store'])->name('ai-bots.store');
     Route::patch('/ai-bots/{bot}', [AdminAiBotController::class, 'update'])->name('ai-bots.update');
+    Route::post('/ai-bots/{bot}/toggle-availability', [AdminAiBotController::class, 'toggleAvailability'])->name('ai-bots.toggle-availability');
 
     Route::get('/signals', [AdminSignalController::class, 'index'])->name('signals.index');
     Route::post('/signals', [AdminSignalController::class, 'store'])->name('signals.store');
     Route::put('/signals/{package}', [AdminSignalController::class, 'update'])->name('signals.update');
     Route::post('/signals/{package}/toggle', [AdminSignalController::class, 'toggle'])->name('signals.toggle');
+    Route::post('/signals/{package}/toggle-availability', [AdminSignalController::class, 'toggleAvailability'])->name('signals.toggle-availability');
     Route::delete('/signals/{package}', [AdminSignalController::class, 'destroy'])->name('signals.destroy');
     Route::post('/signals/subscriptions/{subscription}/adjust', [AdminSignalController::class, 'adjustReturn'])->name('signals.subscriptions.adjust');
 
     Route::get('/mining', [AdminMiningController::class, 'index'])->name('mining.index');
     Route::post('/mining/packages', [AdminMiningController::class, 'store'])->name('mining.store');
     Route::patch('/mining/packages/{package}', [AdminMiningController::class, 'update'])->name('mining.update');
+    Route::post('/mining/packages/{package}/toggle-availability', [AdminMiningController::class, 'toggleAvailability'])->name('mining.toggle-availability');
 
     Route::get('/investments', [AdminInvestmentProductController::class, 'index'])->name('investments.index');
     Route::post('/investments', [AdminInvestmentProductController::class, 'store'])->name('investments.store');
@@ -451,6 +460,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/virtual-cards/{card}/unfreeze', [AdminVirtualCardController::class, 'unfreeze'])->name('virtual-cards.unfreeze');
 
     Route::get('/tax', [AdminTaxController::class, 'index'])->name('tax.index');
+    Route::patch('/tax/{report}', [AdminTaxController::class, 'update'])->name('tax.update');
     Route::get('/billing', [AdminBillingController::class, 'index'])->name('billing.index');
     Route::post('/billing', [AdminBillingController::class, 'store'])->name('billing.store');
     Route::patch('/billing/{package}', [AdminBillingController::class, 'update'])->name('billing.update');
@@ -490,9 +500,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
 
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
-    Route::post('/settings/copy-trading-min-amount', [AdminSettingsController::class, 'updateCopyTradingMinAmount'])->name('settings.copy-trading-min-amount');
     Route::get('/settings/feature-flags', [AdminSettingsController::class, 'featureFlags'])->name('settings.feature-flags');
     Route::post('/settings/feature-flags/{flag}/toggle', [AdminSettingsController::class, 'toggleFlag'])->name('settings.feature-flags.toggle');
+
+    Route::get('/settings/live-chat', [LiveChatSettingController::class, 'edit'])->name('settings.live-chat');
+    Route::post('/settings/live-chat', [LiveChatSettingController::class, 'update'])->name('settings.live-chat.update');
 
     Route::get('/settings/branding', [AdminBrandingController::class, 'edit'])->name('settings.branding');
     Route::post('/settings/branding', [AdminBrandingController::class, 'update'])->name('settings.branding.update');

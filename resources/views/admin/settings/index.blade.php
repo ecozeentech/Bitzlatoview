@@ -4,18 +4,7 @@
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Platform Settings</h1>
 
-    <div class="glass-card p-6">
-        <h2 class="mb-3 font-semibold">Copy Trading — Global Minimum Investment</h2>
-        <p class="mb-3 text-sm text-text-muted">Every user's chosen "minimum investment amount" when copying a trader must be at least this platform-wide floor.</p>
-        <form method="POST" action="{{ route('admin.settings.copy-trading-min-amount') }}" class="flex flex-wrap items-end gap-3">
-            @csrf
-            <div>
-                <label class="label-field">Global minimum (USDT)</label>
-                <input type="number" step="0.01" min="0" name="copy_trading_min_amount" value="{{ $copyTradingMinAmount }}" class="input-field w-48" required>
-            </div>
-            <button class="btn-brand text-sm">Save</button>
-        </form>
-    </div>
+    <p class="text-xs text-text-muted">Each copy trader now has their own minimum copy amount, set per-trader on <a href="{{ route('admin.copy-trading.index') }}" class="text-brand hover:underline">Copy Trading</a>.</p>
 
     <div class="glass-card p-6">
         <form method="POST" action="{{ route('admin.settings.update') }}" class="grid gap-3 sm:grid-cols-3">

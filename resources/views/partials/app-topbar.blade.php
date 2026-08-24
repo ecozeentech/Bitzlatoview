@@ -52,7 +52,7 @@
 
         <div class="relative" x-data="{ open: false }">
             <button @click="open = !open" class="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm">
-                <span class="h-6 w-6 rounded-full bg-brand-gradient text-center text-xs font-bold leading-6 text-background">{{ substr(auth()->user()->name,0,1) }}</span>
+                <x-user-avatar :user="auth()->user()" />
                 <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
             </button>
             <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-2 w-52 rounded-xl border border-border bg-surface p-2 shadow-glass">

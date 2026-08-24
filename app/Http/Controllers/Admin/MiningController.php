@@ -44,4 +44,15 @@ class MiningController extends Controller
 
         return back()->with('success', 'Package updated.');
     }
+
+    public function toggleAvailability(MiningPackage $package)
+    {
+        $package->update(['is_sold_out' => ! $package->is_sold_out]);
+
+        \App\Models\AuditLog::record(auth()->user(), 'mining_package.availability_toggled', MiningPackage::class, $package->id, null, ['is_sold_out' => $package->is_sold_out]);
+
+        return back()->with('success', $package->is_sold_out
+            ? "{$package->name} is now marked Sold Out — no new contracts until you mark it available again."
+            : "{$package->name} is available again.");
+    }
 }
