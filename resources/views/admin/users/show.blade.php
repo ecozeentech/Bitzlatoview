@@ -35,6 +35,32 @@
     </div>
 
     <div class="glass-card p-5">
+        <h2 class="mb-3 font-semibold">Add / Remove Funds</h2>
+        <p class="mb-3 text-xs text-text-muted">Every manual adjustment posts a real ledger entry and requires a second admin's approval before funds move (maker/checker control) — see <a href="{{ route('admin.adjustments.index') }}" class="text-brand hover:underline">Balance Adjustments</a> for pending approvals.</p>
+        <form method="POST" action="{{ route('admin.adjustments.store') }}" class="grid gap-3 sm:grid-cols-5">
+            @csrf
+            <input type="hidden" name="user_id" value="{{ $user->id }}">
+            <select name="wallet_type" class="input-field">
+                <option value="primary">Primary</option>
+                <option value="trading">Trading</option>
+                <option value="investment">Investment</option>
+            </select>
+            <select name="asset_id" class="input-field">
+                @foreach ($assets as $asset)
+                    <option value="{{ $asset->id }}">{{ $asset->symbol }}</option>
+                @endforeach
+            </select>
+            <select name="direction" class="input-field">
+                <option value="credit">Add funds (credit)</option>
+                <option value="debit">Remove funds (debit)</option>
+            </select>
+            <input type="number" step="0.00000001" name="amount" class="input-field" placeholder="Amount" required>
+            <button class="btn-brand text-sm">Request</button>
+            <input type="text" name="reason" class="input-field sm:col-span-5" placeholder="Reason (required, audited)" required>
+        </form>
+    </div>
+
+    <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Wallet Balances (read-only)</h2>
         <div class="overflow-x-auto">
             <table class="data-table">

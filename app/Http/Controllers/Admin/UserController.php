@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminNote;
+use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\LedgerEntry;
 use App\Models\User;
@@ -26,8 +27,9 @@ class UserController extends Controller
         $user->load('walletAccounts.balances.asset', 'kycSubmissions', 'orders', 'deposits', 'withdrawals', 'virtualCards');
         $ledgerEntries = LedgerEntry::whereIn('wallet_account_id', $user->walletAccounts->pluck('id'))->with('asset')->latest()->take(30)->get();
         $notes = AdminNote::where('notable_type', User::class)->where('notable_id', $user->id)->latest()->get();
+        $assets = Asset::where('is_active', true)->orderBy('symbol')->get();
 
-        return view('admin.users.show', compact('user', 'ledgerEntries', 'notes'));
+        return view('admin.users.show', compact('user', 'ledgerEntries', 'notes', 'assets'));
     }
 
     public function update(Request $request, User $user)
