@@ -27,11 +27,13 @@ class BrandingSetting extends Model
 
     public function logoUrl(): ?string
     {
-        return $this->logo_path ? asset('storage/'.$this->logo_path) : null;
+        // Root-relative on purpose — see App\Models\User::avatarUrl() for why absolute
+        // asset() URLs (which depend on APP_URL being correctly set) are avoided here.
+        return $this->logo_path ? '/storage/'.$this->logo_path : null;
     }
 
     public function faviconUrl(): ?string
     {
-        return $this->favicon_path ? asset('storage/'.$this->favicon_path) : null;
+        return $this->favicon_path ? '/storage/'.$this->favicon_path : null;
     }
 }

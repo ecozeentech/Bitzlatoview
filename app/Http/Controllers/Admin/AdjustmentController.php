@@ -23,7 +23,14 @@ class AdjustmentController extends Controller
         return view('admin.adjustments.index', compact('adjustments', 'users', 'assets'));
     }
 
-    public function store(Request $request)
+    /**
+     * Balance adjustments now apply immediately on submission rather than requiring a second
+     * admin's approval first — a deliberate operational choice by the platform owner to speed
+     * up support workflows. Every adjustment still posts a real, audited ledger transaction
+     * and is fully attributed to the submitting admin; approve()/reject() are kept only for
+     * any older records still sitting in 'pending_approval' from before this change.
+     */
+    public function store(Request $request, LedgerService $ledger)
     {
         $data = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
@@ -36,6 +43,31 @@ class AdjustmentController extends Controller
         ]);
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $data['user_id'], 'type' => $data['wallet_type']]);
+        $house = House::wallet($wallet->type);
+        $asset = Asset::findOrFail($data['asset_id']);
+        $amount = (string) $data['amount'];
+
+        $entries = $data['direction'] === 'credit'
+            ? [
+                ['wallet_account_id' => $house->id, 'asset_id' => $asset->id, 'direction' => 'debit', 'amount' => $amount],
+                ['wallet_account_id' => $wallet->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $amount],
+            ]
+            : [
+                ['wallet_account_id' => $wallet->id, 'asset_id' => $asset->id, 'direction' => 'debit', 'amount' => $amount],
+                ['wallet_account_id' => $house->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $amount],
+            ];
+
+        try {
+            $transaction = $ledger->post(
+                entries: $entries,
+                referenceType: 'admin_adjustment',
+                description: "Admin balance adjustment: {$data['reason']}",
+                createdBy: auth()->user(),
+                approvedBy: auth()->user(),
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', 'Insufficient available balance in that wallet for a debit of this size.');
+        }
 
         $adjustment = BalanceAdjustment::create([
             'user_id' => $data['user_id'],
@@ -46,12 +78,14 @@ class AdjustmentController extends Controller
             'reason' => $data['reason'],
             'evidence_url' => $data['evidence_url'] ?? null,
             'requested_by' => auth()->id(),
-            'status' => 'pending_approval',
+            'approved_by' => auth()->id(),
+            'status' => 'applied',
+            'ledger_transaction_id' => $transaction->id,
         ]);
 
-        AuditLog::record(auth()->user(), 'balance_adjustment.requested', BalanceAdjustment::class, $adjustment->id);
+        AuditLog::record(auth()->user(), 'balance_adjustment.applied', BalanceAdjustment::class, $adjustment->id, null, $data);
 
-        return back()->with('success', 'Adjustment requested. Requires a second admin approval before funds move (maker/checker control).');
+        return back()->with('success', 'Funds '.($data['direction'] === 'credit' ? 'credited to' : 'debited from')." {$wallet->label()} and applied immediately.");
     }
 
     public function approve(BalanceAdjustment $adjustment, LedgerService $ledger)

@@ -4,6 +4,7 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-background text-text-main" x-data="{ sidebarOpen: false }">
+    @include('partials.impersonation-banner')
     @include('partials.app-topbar')
     @include('partials.pwa-install-banner')
 

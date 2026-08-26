@@ -27,7 +27,10 @@
                         <td>{{ $u->role }}</td>
                         <td><span class="pill-{{ $u->kyc_status === 'approved' ? 'success' : 'warning' }}">{{ str_replace('_',' ',$u->kyc_status) }}</span></td>
                         <td><span class="pill-{{ $u->status === 'active' ? 'success' : 'danger' }}">{{ $u->status }}</span></td>
-                        <td><a href="{{ route('admin.users.show', $u) }}" class="text-xs text-brand hover:underline">View</a></td>
+                        <td class="space-x-2 whitespace-nowrap">
+                            <a href="{{ route('admin.users.show', $u) }}" class="text-xs text-brand hover:underline">View</a>
+                            <form method="POST" action="{{ route('admin.users.login-as', $u) }}" class="inline" onsubmit="return confirm('Log in as {{ $u->name }}? This is audited.')">@csrf<button class="text-xs text-brand hover:underline">Login as</button></form>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

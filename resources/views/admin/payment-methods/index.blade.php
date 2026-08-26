@@ -75,7 +75,7 @@
                         <td>
                             {{ $method->label() }}
                             @if ($method->qr_code_path)
-                                <img src="{{ asset('storage/'.$method->qr_code_path) }}" class="mt-1 h-10 w-10 rounded border border-border">
+                                <img src="{{ '/storage/'.$method->qr_code_path }}" class="mt-1 h-10 w-10 rounded border border-border">
                             @endif
                         </td>
                         <td>{{ str_replace('_', ' ', $method->type) }}</td>
@@ -133,7 +133,7 @@
                                     <label class="label-field">Replace QR code image (optional)</label>
                                     <input type="file" name="qr_code" accept="image/*" class="input-field">
                                     @if ($method->qr_code_path)
-                                        <p class="mt-1 text-xs text-text-muted">Current: <img src="{{ asset('storage/'.$method->qr_code_path) }}" class="mt-1 inline h-8 w-8 rounded border border-border align-middle"></p>
+                                        <p class="mt-1 text-xs text-text-muted">Current: <img src="{{ '/storage/'.$method->qr_code_path }}" class="mt-1 inline h-8 w-8 rounded border border-border align-middle"></p>
                                     @endif
                                 </div>
                                 <div>
