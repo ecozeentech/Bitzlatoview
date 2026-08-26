@@ -37,7 +37,11 @@ class User extends Authenticatable
 
     public function avatarUrl(): ?string
     {
-        return $this->avatar_path ? asset('storage/'.$this->avatar_path) : null;
+        // Deliberately a root-relative path (not asset()/an absolute URL) — if APP_URL is ever
+        // misconfigured on a server, an absolute URL built from it silently breaks every image
+        // on the platform. A relative path always resolves against whatever host actually
+        // served the page, so it can never go stale like that.
+        return $this->avatar_path ? '/storage/'.$this->avatar_path : null;
     }
 
     public function isAdmin(): bool

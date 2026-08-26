@@ -39,7 +39,7 @@
                     <tr>
                         <td class="flex items-center gap-2">
                             @if ($c->banner_image)
-                                <img src="{{ asset('storage/'.$c->banner_image) }}" class="h-8 w-8 rounded object-cover">
+                                <img src="{{ '/storage/'.$c->banner_image }}" class="h-8 w-8 rounded object-cover">
                             @endif
                             {{ $c->name }}
                         </td>
@@ -73,7 +73,7 @@
                                         @foreach ($c->items as $item)
                                             <tr>
                                                 <td class="flex items-center gap-2">
-                                                    @if ($item->image)<img src="{{ asset('storage/'.$item->image) }}" class="h-6 w-6 rounded object-cover">@endif
+                                                    @if ($item->image)<img src="{{ '/storage/'.$item->image }}" class="h-6 w-6 rounded object-cover">@endif
                                                     {{ $item->name }}
                                                 </td>
                                                 <td class="text-text-muted">{{ $item->token_id }}</td>

@@ -9,13 +9,13 @@
     <link rel="apple-touch-icon" href="{{ $branding->faviconUrl() }}">
 @else
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23070A12%22/><text x=%2250%25%22 y=%2258%25%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22%23F5B301%22 font-family=%22Arial%22 font-weight=%22bold%22>{{ substr($branding->site_name, 0, 1) }}</text></svg>">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('icons/favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/icon-180x180.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
 @endif
 
 {{-- Progressive Web App --}}
-<link rel="manifest" href="{{ asset('manifest.json') }}">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0B0F1A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
