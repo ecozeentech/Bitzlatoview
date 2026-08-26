@@ -57,9 +57,9 @@ class AdminOperationsTest extends TestCase
     {
         $this->seed();
         $admin = User::factory()->create(['role' => 'admin']);
-        $secondAdmin = User::factory()->create(['role' => 'admin']);
         $user = User::factory()->create();
 
+        // Balance adjustments now apply immediately — no second-admin approval step.
         $this->actingAs($admin)->post(route('admin.adjustments.store'), [
             'user_id' => $user->id,
             'wallet_type' => 'primary',
@@ -70,14 +70,24 @@ class AdminOperationsTest extends TestCase
         ])->assertRedirect();
 
         $adjustment = \App\Models\BalanceAdjustment::latest()->first();
-        $this->assertEquals('pending_approval', $adjustment->status);
-
-        // Requires a second admin to approve (maker/checker).
-        $this->actingAs($secondAdmin)->post(route('admin.adjustments.approve', $adjustment))->assertRedirect();
+        $this->assertEquals('applied', $adjustment->status);
+        $this->assertEquals($admin->id, $adjustment->approved_by);
 
         $wallet = WalletAccount::where('user_id', $user->id)->where('type', 'primary')->first();
         $usdt = Asset::where('symbol', 'USDT')->first();
         $this->assertEquals(250, (float) $wallet->balanceFor($usdt)->available);
+
+        // Debits reduce the same wallet immediately too.
+        $this->actingAs($admin)->post(route('admin.adjustments.store'), [
+            'user_id' => $user->id,
+            'wallet_type' => 'primary',
+            'asset_id' => $usdt->id,
+            'direction' => 'debit',
+            'amount' => 100,
+            'reason' => 'Manual debit test',
+        ])->assertRedirect();
+
+        $this->assertEquals(150, (float) $wallet->balanceFor($usdt)->fresh()->available);
     }
 
     public function test_live_chat_widget_only_renders_when_fully_configured_and_enabled(): void

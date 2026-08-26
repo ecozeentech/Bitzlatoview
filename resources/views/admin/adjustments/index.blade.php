@@ -2,11 +2,11 @@
 
 @section('content')
 <div class="space-y-6">
-    <h1 class="text-2xl font-bold">Balance Adjustments (Maker/Checker)</h1>
-    <div class="risk-banner">No direct balance editing. Every adjustment requires a reason, optional evidence, and a second admin's approval before it posts to the ledger.</div>
+    <h1 class="text-2xl font-bold">Balance Adjustments</h1>
+    <div class="risk-banner">No direct balance editing — every adjustment requires a reason and posts a real, audited ledger transaction immediately. There is no second-admin approval step; make sure admin account access is tightly controlled.</div>
 
     <div class="glass-card p-6">
-        <h2 class="mb-3 font-semibold">Request Adjustment</h2>
+        <h2 class="mb-3 font-semibold">Credit / Debit a User's Wallet</h2>
         <form method="POST" action="{{ route('admin.adjustments.store') }}" class="grid gap-3 sm:grid-cols-3">
             @csrf
             <select name="user_id" class="input-field">
@@ -20,7 +20,7 @@
             <input type="number" step="0.00000001" name="amount" class="input-field" placeholder="Amount" required>
             <input type="url" name="evidence_url" class="input-field" placeholder="Evidence URL (optional)">
             <textarea name="reason" class="input-field sm:col-span-3" placeholder="Reason (required, audited)" rows="2" required></textarea>
-            <button class="btn-brand sm:col-span-3">Request Adjustment</button>
+            <button class="btn-brand sm:col-span-3">Apply Adjustment</button>
         </form>
     </div>
 
