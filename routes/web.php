@@ -131,6 +131,8 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/locale/{locale}', [LocaleController::class, 'update'])->name('locale.update');
 
+Route::post('/stop-impersonating', [AdminUserController::class, 'stopImpersonating'])->middleware('auth')->name('stop-impersonating');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 /*
@@ -348,7 +350,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
     Route::post('/users/{user}/unsuspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
     Route::post('/users/{user}/notes', [AdminUserController::class, 'addNote'])->name('users.notes.store');
+    Route::patch('/notes/{note}', [AdminUserController::class, 'updateNote'])->name('users.notes.update');
+    Route::delete('/notes/{note}', [AdminUserController::class, 'destroyNote'])->name('users.notes.destroy');
     Route::post('/users/{user}/force-password-reset', [AdminUserController::class, 'forcePasswordReset'])->name('users.force-password-reset');
+    Route::post('/users/{user}/wallets/{type}/toggle-suspension', [AdminUserController::class, 'toggleWalletSuspension'])->name('users.wallets.toggle-suspension');
+    Route::post('/users/{user}/login-as', [AdminUserController::class, 'loginAsUser'])->name('users.login-as');
 
     Route::get('/kyc', [AdminKycController::class, 'index'])->name('kyc.index');
     Route::get('/kyc/{submission}', [AdminKycController::class, 'show'])->name('kyc.show');

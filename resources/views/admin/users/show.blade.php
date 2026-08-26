@@ -14,6 +14,10 @@
                 <form method="POST" action="{{ route('admin.users.unsuspend', $user) }}">@csrf<button class="btn-brand text-sm">Reactivate</button></form>
             @endif
             <form method="POST" action="{{ route('admin.users.force-password-reset', $user) }}">@csrf<button class="btn-outline text-sm">Force Password Reset</button></form>
+            <form method="POST" action="{{ route('admin.users.login-as', $user) }}" onsubmit="return confirm('Log in as {{ $user->name }}? This is fully audited and will switch your active session to their account.')">
+                @csrf
+                <button class="btn-brand text-sm">Login as User</button>
+            </form>
         </div>
     </div>
 
@@ -36,7 +40,7 @@
 
     <div class="glass-card p-5">
         <h2 class="mb-3 font-semibold">Add / Remove Funds</h2>
-        <p class="mb-3 text-xs text-text-muted">Every manual adjustment posts a real ledger entry and requires a second admin's approval before funds move (maker/checker control) — see <a href="{{ route('admin.adjustments.index') }}" class="text-brand hover:underline">Balance Adjustments</a> for pending approvals.</p>
+        <p class="mb-3 text-xs text-text-muted">Applies immediately — posts a real, audited ledger entry with no second-admin approval step. See <a href="{{ route('admin.adjustments.index') }}" class="text-brand hover:underline">Balance Adjustments</a> for the full history.</p>
         <form method="POST" action="{{ route('admin.adjustments.store') }}" class="grid gap-3 sm:grid-cols-5">
             @csrf
             <input type="hidden" name="user_id" value="{{ $user->id }}">
@@ -58,6 +62,32 @@
             <button class="btn-brand text-sm">Request</button>
             <input type="text" name="reason" class="input-field sm:col-span-5" placeholder="Reason (required, audited)" required>
         </form>
+    </div>
+
+    <div class="glass-card p-5">
+        <h2 class="mb-3 font-semibold">Wallet Access</h2>
+        <p class="mb-3 text-xs text-text-muted">Suspending a wallet blocks internal transfers out of it and withdrawal requests from it. Deposits and balance viewing are unaffected.</p>
+        <div class="grid gap-3 sm:grid-cols-3">
+            @foreach (\App\Models\WalletAccount::TYPES as $type)
+                @php $wallet = $user->walletAccounts->firstWhere('type', $type); @endphp
+                <div class="rounded-lg border border-border p-3">
+                    <div class="flex items-center justify-between">
+                        <p class="font-medium">{{ ucfirst($type) }} Wallet</p>
+                        <span class="pill-{{ $wallet?->is_suspended ? 'danger' : 'success' }}">{{ $wallet?->is_suspended ? 'Suspended' : 'Active' }}</span>
+                    </div>
+                    @if ($wallet?->is_suspended && $wallet->suspension_reason)
+                        <p class="mt-1 text-xs text-text-muted">Reason: {{ $wallet->suspension_reason }}</p>
+                    @endif
+                    <form method="POST" action="{{ route('admin.users.wallets.toggle-suspension', [$user, $type]) }}" class="mt-2">
+                        @csrf
+                        @unless ($wallet?->is_suspended)
+                            <input type="text" name="reason" class="input-field mb-2 text-xs" placeholder="Reason (optional)">
+                        @endunless
+                        <button class="btn-outline w-full text-xs">{{ $wallet?->is_suspended ? 'Reactivate Wallet' : 'Suspend Wallet' }}</button>
+                    </form>
+                </div>
+            @endforeach
+        </div>
     </div>
 
     <div class="glass-card p-5">
@@ -105,15 +135,31 @@
         </div>
     </div>
 
-    <div class="glass-card p-5">
+    <div class="glass-card p-5" x-data="{ editNote: null }">
         <h2 class="mb-3 font-semibold">Admin Notes</h2>
+        <p class="mb-3 text-xs text-text-muted">Internal only — never shown to the user.</p>
         <form method="POST" action="{{ route('admin.users.notes.store', $user) }}" class="mb-3 flex gap-2">
             @csrf
             <input type="text" name="note" class="input-field flex-1" placeholder="Add an internal note..." required>
             <button class="btn-outline text-sm">Add</button>
         </form>
         @forelse ($notes as $note)
-            <div class="border-b border-border/60 py-2 text-sm"><span class="text-text-muted">{{ $note->created_at->format('M d, H:i') }}:</span> {{ $note->note }}</div>
+            <div class="border-b border-border/60 py-2 text-sm">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <span class="text-text-muted">{{ $note->created_at->format('M d, H:i') }}:</span> {{ $note->note }}
+                    </div>
+                    <div class="flex shrink-0 gap-2">
+                        <button type="button" @click="editNote = editNote === {{ $note->id }} ? null : {{ $note->id }}" class="text-xs text-brand hover:underline">Edit</button>
+                        <form method="POST" action="{{ route('admin.users.notes.destroy', $note) }}" onsubmit="return confirm('Delete this note?')">@csrf @method('DELETE')<button class="text-xs text-danger hover:underline">Delete</button></form>
+                    </div>
+                </div>
+                <form x-show="editNote === {{ $note->id }}" x-cloak method="POST" action="{{ route('admin.users.notes.update', $note) }}" class="mt-2 flex gap-2">
+                    @csrf @method('PATCH')
+                    <input type="text" name="note" class="input-field flex-1 text-sm" value="{{ $note->note }}" required>
+                    <button class="btn-brand text-xs">Save</button>
+                </form>
+            </div>
         @empty
             <p class="text-sm text-text-muted">No notes yet.</p>
         @endforelse
