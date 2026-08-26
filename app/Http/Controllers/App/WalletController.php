@@ -66,6 +66,10 @@ class WalletController extends Controller
         $to = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => $data['to_type']]);
         $asset = Asset::findOrFail($data['asset_id']);
 
+        if ($from->is_suspended) {
+            return back()->with('error', $from->label().' is suspended and cannot be transferred out of. Contact support for details.');
+        }
+
         try {
             $ledger->post(
                 entries: [

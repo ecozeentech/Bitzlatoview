@@ -18,6 +18,11 @@ class WalletAccount extends Model
 
     public const TYPES = [self::TYPE_PRIMARY, self::TYPE_TRADING, self::TYPE_INVESTMENT];
 
+    protected function casts(): array
+    {
+        return ['is_suspended' => 'boolean'];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

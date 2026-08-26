@@ -102,6 +102,10 @@ class FundingController extends Controller
         $asset = Asset::findOrFail($data['asset_id']);
         $fee = round($data['amount'] * 0.001, 8);
 
+        if ($wallet->is_suspended) {
+            return back()->with('error', $wallet->label().' is suspended and cannot be withdrawn from. Contact support for details.');
+        }
+
         try {
             $ledger->lockFunds($wallet, $asset, (string) $data['amount']);
         } catch (\RuntimeException $e) {

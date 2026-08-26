@@ -4,11 +4,17 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-bold">{{ $wallet->label() }}</h1>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold">{{ $wallet->label() }}</h1>
+                @if ($wallet->is_suspended)
+                    <span class="pill-danger">Suspended</span>
+                @endif
+            </div>
             <p class="font-numeric text-lg text-text-muted">≈ ${{ number_format($total, 2) }}</p>
         </div>
         <div class="flex gap-2">
             <a href="{{ url('/app/funding/deposit') }}?wallet={{ $type }}" class="btn-brand text-sm">Deposit</a>
+            @unless ($wallet->is_suspended)
             <a href="{{ url('/app/funding/withdraw') }}?wallet={{ $type }}" class="btn-outline text-sm">Withdraw</a>
             <details class="relative inline-block">
                 <summary class="btn-ghost cursor-pointer text-sm">Transfer ▾</summary>
@@ -44,8 +50,13 @@
                     </form>
                 </div>
             </details>
+            @endunless
         </div>
     </div>
+
+    @if ($wallet->is_suspended)
+        <div class="risk-banner">This wallet is suspended{{ $wallet->suspension_reason ? ': '.$wallet->suspension_reason : '.' }} Withdrawals and internal transfers out of it are blocked. Contact support if you believe this is a mistake.</div>
+    @endif
 
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
