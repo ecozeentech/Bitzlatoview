@@ -55,9 +55,10 @@
 
             <div class="rounded-lg border border-border bg-surface-2 p-4 text-sm" x-show="quote" x-cloak>
                 <div class="flex justify-between"><span class="text-text-muted">Rate</span><span class="font-numeric" x-text="quote ? quote.rate.toFixed(6) : ''"></span></div>
-                <div class="flex justify-between"><span class="text-text-muted">Fee (0.25%)</span><span class="font-numeric" x-text="quote ? quote.fee.toFixed(8) : ''"></span></div>
+                <div class="flex justify-between"><span class="text-text-muted">Fee (0.25%, from Primary Wallet)</span><span class="font-numeric" x-text="quote ? quote.fee.toFixed(8) : ''"></span></div>
                 <div class="flex justify-between"><span class="text-text-muted">Minimum received</span><span class="font-numeric" x-text="quote ? quote.min_received.toFixed(8) : ''"></span></div>
                 <div class="mt-1 flex justify-between font-semibold"><span>You receive ≈</span><span class="font-numeric text-brand" x-text="quote ? quote.net.toFixed(8) : ''"></span></div>
+                <p class="mt-2 text-xs text-text-muted">The swap fee is charged separately from your Primary Wallet (in the asset you're receiving), not from the wallet you're swapping in.</p>
             </div>
 
             <div class="risk-banner">Swap rates track live market prices but settle internally on Bitzlatoview's ledger, not on-chain or against external exchange liquidity.</div>

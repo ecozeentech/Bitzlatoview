@@ -7,6 +7,7 @@ use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\Transfer;
 use App\Models\WalletAccount;
+use App\Models\Withdrawal;
 use App\Services\LedgerService;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
@@ -40,6 +41,10 @@ class WalletController extends Controller
             ->take(15)
             ->get();
 
+        $pendingWithdrawals = Withdrawal::where('wallet_account_id', $wallet->id)
+            ->whereIn('status', ['pending_review', 'approved', 'processing'])
+            ->with('asset')->latest()->get();
+
         return view('app.wallet.show', [
             'wallet' => $wallet,
             'type' => $type,
@@ -47,6 +52,7 @@ class WalletController extends Controller
             'total' => $rows->sum('usd'),
             'history' => $history,
             'otherWallets' => collect(WalletAccount::TYPES)->reject(fn ($t) => $t === $type),
+            'pendingWithdrawals' => $pendingWithdrawals,
         ]);
     }
 

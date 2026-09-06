@@ -15,6 +15,7 @@ class KycSubmission extends Model
         return [
             'is_pep' => 'boolean',
             'is_sanctioned' => 'boolean',
+            'manually_verified' => 'boolean',
             'date_of_birth' => 'date',
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',

@@ -29,6 +29,10 @@
         </table>
     </div>
 
-    <a href="{{ route('admin.settings.feature-flags') }}" class="btn-outline text-sm">Manage Feature Flags</a>
+    <div class="flex gap-3">
+        <a href="{{ route('admin.settings.feature-flags') }}" class="btn-outline text-sm">Manage Feature Flags</a>
+        <a href="{{ route('admin.settings.withdrawal-fee') }}" class="btn-outline text-sm">Withdrawal Fee</a>
+        <a href="{{ route('admin.wallets.locked-balances.index') }}" class="btn-outline text-sm">Locked Balances</a>
+    </div>
 </div>
 @endsection

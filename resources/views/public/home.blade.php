@@ -38,12 +38,13 @@
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="font-numeric text-sm">${{ number_format($market->quote->price, $market->quote->price < 1 ? 4 : 2) }}</p>
-                                <x-price-change :value="$market->quote->change_24h_pct" />
+                                <p class="font-numeric text-sm" data-live-price="{{ $market->symbol }}">${{ number_format($market->quote->price, $market->quote->price < 1 ? 4 : 2) }}</p>
+                                <x-price-change data-live-change="{{ $market->symbol }}" :value="$market->quote->change_24h_pct" />
                             </div>
                         </div>
                     @endforeach
                 </div>
+                <p class="mt-3 text-right text-xs text-text-muted" data-live-updated-at>Live · updated {{ now()->format('H:i:s') }}</p>
             </div>
         </div>
     </div>
@@ -55,8 +56,8 @@
         @foreach ($markets->concat($markets) as $market)
             <span class="flex items-center gap-2 font-numeric">
                 <span class="font-semibold text-text-main">{{ $market->symbol }}</span>
-                <span>${{ number_format($market->quote->price, 2) }}</span>
-                <x-price-change :value="$market->quote->change_24h_pct" />
+                <span data-live-price="{{ $market->symbol }}">${{ number_format($market->quote->price, 2) }}</span>
+                <x-price-change data-live-change="{{ $market->symbol }}" :value="$market->quote->change_24h_pct" />
             </span>
         @endforeach
     </div>
@@ -74,7 +75,7 @@
             @foreach ($topGainers as $m)
                 <div class="flex items-center justify-between border-b border-border/60 py-2.5 last:border-0">
                     <span class="flex items-center gap-2"><x-asset-icon :symbol="$m->baseAsset->symbol" /> {{ $m->symbol }}</span>
-                    <div class="text-right"><p class="font-numeric text-sm">${{ number_format($m->quote->price, 2) }}</p><x-price-change :value="$m->quote->change_24h_pct" /></div>
+                    <div class="text-right"><p class="font-numeric text-sm" data-live-price="{{ $m->symbol }}">${{ number_format($m->quote->price, 2) }}</p><x-price-change data-live-change="{{ $m->symbol }}" :value="$m->quote->change_24h_pct" /></div>
                 </div>
             @endforeach
         </div>
@@ -86,7 +87,7 @@
             @foreach ($topLosers as $m)
                 <div class="flex items-center justify-between border-b border-border/60 py-2.5 last:border-0">
                     <span class="flex items-center gap-2"><x-asset-icon :symbol="$m->baseAsset->symbol" /> {{ $m->symbol }}</span>
-                    <div class="text-right"><p class="font-numeric text-sm">${{ number_format($m->quote->price, 2) }}</p><x-price-change :value="$m->quote->change_24h_pct" /></div>
+                    <div class="text-right"><p class="font-numeric text-sm" data-live-price="{{ $m->symbol }}">${{ number_format($m->quote->price, 2) }}</p><x-price-change data-live-change="{{ $m->symbol }}" :value="$m->quote->change_24h_pct" /></div>
                 </div>
             @endforeach
         </div>

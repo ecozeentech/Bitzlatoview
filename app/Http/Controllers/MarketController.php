@@ -15,6 +15,32 @@ class MarketController extends Controller
         return view('public.markets.index', ['markets' => $markets]);
     }
 
+    /**
+     * Lightweight JSON ticker polled by the frontend (see resources/js/app.js) to keep every
+     * price shown on the site — spot header, market tables, dashboard, homepage ticker — in
+     * sync with the latest quote without a full page reload. Public: prices aren't sensitive
+     * and unauthenticated visitors see live prices on the public markets/homepage too.
+     */
+    public function prices()
+    {
+        $markets = MarketPair::where('is_active', true)->with('quote')->get();
+
+        return response()->json(
+            $markets->mapWithKeys(function (MarketPair $market) {
+                $quote = $market->quote;
+
+                return [$market->symbol => [
+                    'price' => (float) ($quote->price ?? 0),
+                    'change_24h_pct' => (float) ($quote->change_24h_pct ?? 0),
+                    'high_24h' => (float) ($quote->high_24h ?? 0),
+                    'low_24h' => (float) ($quote->low_24h ?? 0),
+                    'volume_24h' => (float) ($quote->volume_24h ?? 0),
+                    'updated_at' => $quote?->updated_at?->toIso8601String(),
+                ]];
+            })
+        );
+    }
+
     public function topGainers()
     {
         $markets = MarketPair::with(['baseAsset', 'quote'])->get()

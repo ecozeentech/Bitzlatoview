@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Deposit;
 use App\Models\Network;
 use App\Models\PaymentMethod;
+use App\Models\SystemSetting;
 use App\Models\WalletAccount;
 use App\Models\Withdrawal;
 use App\Models\WithdrawalAddress;
@@ -80,6 +81,11 @@ class FundingController extends Controller
             'networks' => Network::where('is_active', true)->get(),
             'addresses' => WithdrawalAddress::where('user_id', $user->id)->get(),
             'selectedWallet' => $request->query('wallet', 'primary'),
+            'pendingWithdrawals' => Withdrawal::where('user_id', $user->id)
+                ->whereIn('status', ['pending_review', 'approved', 'processing'])
+                ->with('asset', 'walletAccount')->latest()->get(),
+            'withdrawalFeeEnabled' => (bool) SystemSetting::getValue('withdrawal_fee_enabled', true),
+            'withdrawalFeePct' => (float) SystemSetting::getValue('withdrawal_fee_percentage', 0.1),
         ]);
     }
 
@@ -100,12 +106,16 @@ class FundingController extends Controller
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => $data['wallet_type']]);
         $asset = Asset::findOrFail($data['asset_id']);
-        $fee = round($data['amount'] * 0.001, 8);
+        $fee = Withdrawal::calculateFee((float) $data['amount']);
+        $netAmount = round((float) $data['amount'] - $fee, 8);
 
         if ($wallet->is_suspended) {
             return back()->with('error', $wallet->label().' is suspended and cannot be withdrawn from. Contact support for details.');
         }
 
+        // The full requested amount is locked immediately — the fee is only carved out (and
+        // credited to the platform's fee wallet) once the withdrawal is actually completed,
+        // so a rejected withdrawal always unlocks the full amount with nothing deducted.
         try {
             $ledger->lockFunds($wallet, $asset, (string) $data['amount']);
         } catch (\RuntimeException $e) {
@@ -121,6 +131,7 @@ class FundingController extends Controller
             'destination_details' => $data['destination_details'] ?? null,
             'amount' => $data['amount'],
             'fee' => $fee,
+            'net_amount' => $netAmount,
             'address' => $data['address'],
             'status' => 'pending_review',
             'user_note' => $data['note'] ?? null,
@@ -133,7 +144,7 @@ class FundingController extends Controller
             'asset' => $asset->symbol,
         ]);
 
-        return redirect('/app/funding/transactions')->with('success', "Withdrawal request #{$withdrawal->id} submitted. Funds are locked in your wallet and will be sent by an administrator after manual verification — every withdrawal requires human review before any money moves.");
+        return redirect('/app/funding/transactions')->with('success', "Withdrawal request #{$withdrawal->id} submitted for ".number_format((float) $data['amount'], 8)." {$asset->symbol}. Funds are locked in your wallet and will be sent by an administrator after manual verification. Fee: ".number_format($fee, 8)." {$asset->symbol} — you will receive ".number_format($netAmount, 8)." {$asset->symbol}.");
     }
 
     /**
@@ -144,18 +155,33 @@ class FundingController extends Controller
     {
         $wallet = $withdrawal->walletAccount;
         $asset = $withdrawal->asset;
-        $house = House::wallet(WalletAccount::TYPE_PRIMARY);
+        // "Sent externally" leg mirrors the wallet type actually withdrawn from, so House's
+        // per-wallet-type books stay balanced. The fee leg always lands in House's Primary
+        // Wallet regardless of source — it's the platform's central fee-revenue bucket.
+        $houseSource = House::wallet($wallet->type);
+        $housePrimary = House::wallet(WalletAccount::TYPE_PRIMARY);
+
+        $fee = (float) $withdrawal->fee;
+        // Fall back to amount-minus-fee for any withdrawal that was created before net_amount
+        // existed (or otherwise has it unset), rather than trusting a stale/zero column.
+        $netAmount = (float) $withdrawal->net_amount > 0 ? (float) $withdrawal->net_amount : round((float) $withdrawal->amount - $fee, 8);
 
         $ledger->unlockFunds($wallet, $asset, (string) $withdrawal->amount);
 
+        $entries = [
+            ['wallet_account_id' => $wallet->id, 'asset_id' => $asset->id, 'direction' => 'debit', 'amount' => $withdrawal->amount],
+            ['wallet_account_id' => $houseSource->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $netAmount],
+        ];
+
+        if ($fee > 0) {
+            $entries[] = ['wallet_account_id' => $housePrimary->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $fee];
+        }
+
         $ledger->post(
-            entries: [
-                ['wallet_account_id' => $wallet->id, 'asset_id' => $asset->id, 'direction' => 'debit', 'amount' => $withdrawal->amount],
-                ['wallet_account_id' => $house->id, 'asset_id' => $asset->id, 'direction' => 'credit', 'amount' => $withdrawal->amount],
-            ],
+            entries: $entries,
             referenceType: 'withdrawal',
             referenceId: $withdrawal->id,
-            description: "Withdrawal of {$withdrawal->amount} {$asset->symbol}",
+            description: "Withdrawal of {$withdrawal->amount} {$asset->symbol} (fee {$fee} {$asset->symbol}, net {$netAmount} {$asset->symbol})",
             approvedBy: $approver,
         );
 

@@ -58,6 +58,28 @@
         <div class="risk-banner">This wallet is suspended{{ $wallet->suspension_reason ? ': '.$wallet->suspension_reason : '.' }} Withdrawals and internal transfers out of it are blocked. Contact support if you believe this is a mistake.</div>
     @endif
 
+    @if ($pendingWithdrawals->isNotEmpty())
+        <div class="glass-card p-5">
+            <h2 class="mb-1 font-semibold">Pending Withdrawals from this Wallet</h2>
+            <p class="mb-3 text-xs text-text-muted">Already deducted from Available and held under Locked above while awaiting admin review.</p>
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>Asset</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach ($pendingWithdrawals as $w)
+                        <tr>
+                            <td class="text-text-muted">{{ $w->created_at->format('M d, H:i') }}</td>
+                            <td>{{ $w->asset->symbol }}</td>
+                            <td class="font-numeric">{{ number_format($w->amount, 8) }}</td>
+                            <td class="font-numeric text-text-muted">{{ number_format($w->fee, 8) }}</td>
+                            <td class="font-numeric">{{ number_format($w->net_amount ?: ($w->amount - $w->fee), 8) }}</td>
+                            <td><span class="pill-warning">{{ str_replace('_', ' ', ucfirst($w->status)) }}</span></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     <div class="glass-card overflow-x-auto">
         <table class="data-table">
             <thead><tr><th>Asset</th><th>Available</th><th>Locked</th><th>Total</th><th>≈ USD</th></tr></thead>

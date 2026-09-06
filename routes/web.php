@@ -1,24 +1,26 @@
 <?php
 
 use App\Http\Controllers\Admin\AdjustmentController as AdminAdjustmentController;
+use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AiBotController as AdminAiBotController;
-use App\Http\Controllers\Admin\SignalController as AdminSignalController;
+use App\Http\Controllers\Admin\AssetController as AdminAssetController;
 use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\BillingController as AdminBillingController;
+use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
 use App\Http\Controllers\Admin\CmsController as AdminCmsController;
 use App\Http\Controllers\Admin\CopyTradingController as AdminCopyTradingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DepositController as AdminDepositController;
 use App\Http\Controllers\Admin\EmailController as AdminEmailController;
 use App\Http\Controllers\Admin\ExtendedMarketController as AdminExtendedMarketController;
-use App\Http\Controllers\Admin\StockInstrumentController as AdminStockInstrumentController;
 use App\Http\Controllers\Admin\ForexPairController as AdminForexPairController;
 use App\Http\Controllers\Admin\FuturesMarketController as AdminFuturesMarketController;
 use App\Http\Controllers\Admin\InvestmentProductController as AdminInvestmentProductController;
 use App\Http\Controllers\Admin\KycController as AdminKycController;
 use App\Http\Controllers\Admin\LedgerController as AdminLedgerController;
+use App\Http\Controllers\Admin\LiveChatSettingController;
+use App\Http\Controllers\Admin\LockedBalanceController;
 use App\Http\Controllers\Admin\MarketController as AdminMarketController;
-use App\Http\Controllers\Admin\AssetController as AdminAssetController;
 use App\Http\Controllers\Admin\MiningController as AdminMiningController;
 use App\Http\Controllers\Admin\Mt5Controller as AdminMt5Controller;
 use App\Http\Controllers\Admin\NftController as AdminNftController;
@@ -27,16 +29,14 @@ use App\Http\Controllers\Admin\P2PController as AdminP2PController;
 use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
 use App\Http\Controllers\Admin\RiskController as AdminRiskController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
-use App\Http\Controllers\Admin\BrandingController as AdminBrandingController;
-use App\Http\Controllers\Admin\LiveChatSettingController;
+use App\Http\Controllers\Admin\SignalController as AdminSignalController;
+use App\Http\Controllers\Admin\StockInstrumentController as AdminStockInstrumentController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
-use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\SwapController as AdminSwapController;
 use App\Http\Controllers\Admin\TaxController as AdminTaxController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VirtualCardController as AdminVirtualCardController;
 use App\Http\Controllers\App\AiBotController;
-use App\Http\Controllers\App\SignalController;
 use App\Http\Controllers\App\BillingController;
 use App\Http\Controllers\App\BuySellController;
 use App\Http\Controllers\App\CopyTradingController;
@@ -54,6 +54,7 @@ use App\Http\Controllers\App\NftController;
 use App\Http\Controllers\App\P2PController;
 use App\Http\Controllers\App\ReferralController;
 use App\Http\Controllers\App\SettingsController;
+use App\Http\Controllers\App\SignalController;
 use App\Http\Controllers\App\SpotController;
 use App\Http\Controllers\App\StockController;
 use App\Http\Controllers\App\SupportController;
@@ -65,8 +66,8 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MarketController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProfileController;
@@ -82,6 +83,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::prefix('markets')->name('markets.')->group(function () {
     Route::get('/', [MarketController::class, 'index'])->name('index');
+    Route::get('/prices', [MarketController::class, 'prices'])->name('prices');
     Route::get('/top-gainers', [MarketController::class, 'topGainers'])->name('top-gainers');
     Route::get('/top-losers', [MarketController::class, 'topLosers'])->name('top-losers');
     Route::get('/new-listings', [MarketController::class, 'newListings'])->name('new-listings');
@@ -362,6 +364,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/kyc/{submission}/approve', [AdminKycController::class, 'approve'])->name('kyc.approve');
     Route::post('/kyc/{submission}/reject', [AdminKycController::class, 'reject'])->name('kyc.reject');
     Route::post('/kyc/{submission}/more-info', [AdminKycController::class, 'moreInfo'])->name('kyc.more-info');
+    Route::post('/kyc/users/{user}/manual-approve', [AdminKycController::class, 'manuallyApprove'])->name('kyc.manual-approve');
 
     Route::get('/risk', [AdminRiskController::class, 'index'])->name('risk.index');
     Route::post('/risk/alerts/{alert}/resolve', [AdminRiskController::class, 'resolveAlert'])->name('risk.alerts.resolve');
@@ -508,6 +511,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::get('/settings/feature-flags', [AdminSettingsController::class, 'featureFlags'])->name('settings.feature-flags');
     Route::post('/settings/feature-flags/{flag}/toggle', [AdminSettingsController::class, 'toggleFlag'])->name('settings.feature-flags.toggle');
+    Route::get('/settings/withdrawal-fee', [AdminSettingsController::class, 'withdrawalFee'])->name('settings.withdrawal-fee');
+    Route::post('/settings/withdrawal-fee', [AdminSettingsController::class, 'updateWithdrawalFee'])->name('settings.withdrawal-fee.update');
+
+    Route::get('/wallets/locked-balances', [LockedBalanceController::class, 'index'])->name('wallets.locked-balances.index');
+    Route::post('/wallets/locked-balances/{balance}/unlock', [LockedBalanceController::class, 'unlock'])->name('wallets.locked-balances.unlock');
+    Route::post('/wallets/locked-balances/{balance}/update', [LockedBalanceController::class, 'updateLocked'])->name('wallets.locked-balances.update');
 
     Route::get('/settings/live-chat', [LiveChatSettingController::class, 'edit'])->name('settings.live-chat');
     Route::post('/settings/live-chat', [LiveChatSettingController::class, 'update'])->name('settings.live-chat.update');

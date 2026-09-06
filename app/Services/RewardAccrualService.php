@@ -19,7 +19,7 @@ use Illuminate\Support\Carbon;
  */
 class RewardAccrualService
 {
-    public function __construct(protected LedgerService $ledger) {}
+    public function __construct(protected LedgerService $ledger, protected FeeService $fees) {}
 
     public function accrueMining(User $user): void
     {
@@ -49,11 +49,13 @@ class RewardAccrualService
 
         $dailyReward = (float) $contract->amount_invested * ((float) $package->estimated_daily_reward_pct / 100);
         $maintenanceFee = $dailyReward * ((float) $package->maintenance_fee_pct / 100);
-        $netDaily = max($dailyReward - $maintenanceFee, 0);
 
         for ($i = 1; $i <= $days; $i++) {
             $creditedAt = $since->copy()->addDays($i);
-            $amount = round($netDaily, 8);
+            // Full gross reward is credited — the maintenance fee is charged separately from
+            // the Primary Wallet (platform policy: fees never come from Trading/Investment)
+            // rather than skimmed off the reward itself.
+            $amount = round($dailyReward, 8);
             if ($amount <= 0) {
                 continue;
             }
@@ -74,6 +76,14 @@ class RewardAccrualService
                 'amount' => $amount,
                 'credited_at' => $creditedAt,
             ]);
+
+            $feeAmount = round($maintenanceFee, 8);
+            if ($feeAmount > 0) {
+                $this->fees->attemptCharge(
+                    $contract->user, $asset, $feeAmount, 'mining_maintenance_fee', $contract->id,
+                    "Maintenance fee for mining contract #{$contract->id} (".$creditedAt->format('Y-m-d').')',
+                );
+            }
         }
 
         if (Carbon::parse($contract->end_date)->isPast()) {

@@ -16,6 +16,10 @@ class SystemSetting extends Model
             return $default;
         }
 
+        if ($setting->value === null) {
+            return null;
+        }
+
         return match ($setting->type) {
             'number' => (float) $setting->value,
             'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),

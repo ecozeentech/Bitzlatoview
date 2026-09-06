@@ -8,8 +8,10 @@ use App\Models\AuditLog;
 use App\Models\SignalPackage;
 use App\Models\SignalSubscription;
 use App\Models\WalletAccount;
+use App\Services\FeeService;
 use App\Services\LedgerService;
 use App\Services\PricingService;
+use App\Support\House;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -85,7 +87,7 @@ class SignalController extends Controller
         return back()->with('success', 'Signal subscription resumed.');
     }
 
-    public function stop(SignalSubscription $subscription, LedgerService $ledger, PricingService $pricing)
+    public function stop(SignalSubscription $subscription, LedgerService $ledger, PricingService $pricing, FeeService $fees)
     {
         $this->authorizeOwner($subscription);
 
@@ -95,7 +97,7 @@ class SignalController extends Controller
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $subscription->user_id, 'type' => WalletAccount::TYPE_INVESTMENT]);
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
-        $house = \App\Support\House::wallet(WalletAccount::TYPE_INVESTMENT);
+        $house = House::wallet(WalletAccount::TYPE_INVESTMENT);
         $package = $subscription->package;
 
         // Settle against real market price movement over the holding period rather than a
@@ -103,6 +105,9 @@ class SignalController extends Controller
         // amount actually allocated (no leverage/debt here).
         $pnl = 0.0;
         $exitPrice = null;
+        // Performance fee is charged separately from the Primary Wallet below (platform
+        // policy: fees never come from Trading/Investment) rather than skimmed off PnL.
+        $feeAmount = round((float) $subscription->amount * ((float) $package->fee_pct / 100), 2);
 
         if ($subscription->entry_price > 0) {
             $trackedAsset = Asset::where('symbol', $package->tracked_asset_symbol)->first();
@@ -111,7 +116,6 @@ class SignalController extends Controller
             if ($exitPrice) {
                 $priceChangePct = ($exitPrice - $subscription->entry_price) / $subscription->entry_price;
                 $pnl = round((float) $subscription->amount * $priceChangePct, 2);
-                $pnl -= round((float) $subscription->amount * ((float) $package->fee_pct / 100), 2);
                 $pnl = max($pnl, -1 * (float) $subscription->amount);
             }
         }
@@ -140,6 +144,13 @@ class SignalController extends Controller
                 description: 'Signal subscription loss settled on stop (based on real market price movement)',
             );
             $pnl = -$loss;
+        }
+
+        if ($feeAmount > 0) {
+            $fees->attemptCharge(
+                $subscription->user, $usdt, $feeAmount, 'signal_performance_fee', $subscription->id,
+                "Performance fee for signal subscription #{$subscription->id}",
+            );
         }
 
         $subscription->update(['status' => 'stopped', 'pnl' => $pnl, 'exit_price' => $exitPrice, 'stopped_at' => now()]);

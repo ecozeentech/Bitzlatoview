@@ -1,8 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mx-auto max-w-2xl space-y-6" x-data="{ method: 'crypto' }">
+<div class="mx-auto max-w-2xl space-y-6" x-data="{ method: 'crypto', amount: null, feeEnabled: @js($withdrawalFeeEnabled), feePct: @js($withdrawalFeePct), get fee() { return this.feeEnabled && this.amount > 0 ? (this.amount * (this.feePct / 100)) : 0 }, get net() { return this.amount > 0 ? Math.max(this.amount - this.fee, 0) : 0 } }">
     <h1 class="text-2xl font-bold">Withdraw</h1>
+
+    @if ($pendingWithdrawals->isNotEmpty())
+        <div class="glass-card p-6">
+            <h2 class="mb-3 font-semibold">Pending Withdrawals</h2>
+            <p class="mb-3 text-xs text-text-muted">These amounts are already locked out of your available balance while awaiting admin review.</p>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead><tr><th>Date</th><th>Wallet</th><th>Amount</th><th>Fee</th><th>You'll receive</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach ($pendingWithdrawals as $w)
+                            <tr>
+                                <td>{{ $w->created_at->format('M d, H:i') }}</td>
+                                <td>{{ ucfirst($w->walletAccount->type) }}</td>
+                                <td class="font-numeric">{{ number_format($w->amount, 8) }} {{ $w->asset->symbol }}</td>
+                                <td class="font-numeric text-text-muted">{{ number_format($w->fee, 8) }}</td>
+                                <td class="font-numeric">{{ number_format($w->net_amount ?: ($w->amount - $w->fee), 8) }}</td>
+                                <td><span class="pill-warning">{{ str_replace('_', ' ', ucfirst($w->status)) }}</span></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 
     <div class="glass-card p-6">
         <label class="label-field">How would you like to receive your funds?</label>
@@ -99,8 +123,12 @@
 
             <div>
                 <label class="label-field">Amount</label>
-                <input type="number" step="0.00000001" name="amount" class="input-field" required>
-                <p class="mt-1 text-xs text-text-muted">A network/processing fee of 0.1% applies. Funds are locked in your wallet immediately and released only once an administrator confirms the external transfer was sent.</p>
+                <input type="number" step="0.00000001" name="amount" x-model.number="amount" class="input-field" required>
+                <div class="mt-2 rounded-lg border border-border bg-surface-2 p-3 text-xs" x-show="amount > 0" x-cloak>
+                    <div class="flex justify-between"><span class="text-text-muted">Withdrawal fee (<span x-text="feePct"></span>%)</span><span class="font-numeric" x-text="fee.toFixed(8)"></span></div>
+                    <div class="mt-1 flex justify-between font-semibold"><span>You will receive</span><span class="font-numeric text-brand" x-text="net.toFixed(8)"></span></div>
+                </div>
+                <p class="mt-1 text-xs text-text-muted">Funds are locked in your wallet immediately for the full amount and released only once an administrator confirms the external transfer was sent. The fee is carved out of the amount, not billed separately.</p>
             </div>
             <div>
                 <label class="label-field">Funding note (optional)</label>
