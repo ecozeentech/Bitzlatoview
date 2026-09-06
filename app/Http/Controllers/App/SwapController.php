@@ -7,6 +7,7 @@ use App\Models\Asset;
 use App\Models\AuditLog;
 use App\Models\SwapTransaction;
 use App\Models\WalletAccount;
+use App\Services\FeeService;
 use App\Services\LedgerService;
 use App\Services\PricingService;
 use App\Support\House;
@@ -39,18 +40,18 @@ class SwapController extends Controller
         $rate = $pricing->usdPrice($to) > 0 ? $pricing->usdPrice($from) / $pricing->usdPrice($to) : 0;
         $gross = $data['amount'] * $rate;
         $fee = $gross * (self::FEE_PCT / 100);
-        $net = $gross - $fee;
 
         return response()->json([
             'rate' => $rate,
             'gross' => $gross,
             'fee' => $fee,
-            'net' => $net,
-            'min_received' => $net * 0.995,
+            'fee_note' => 'Charged separately from your Primary Wallet',
+            'net' => $gross,
+            'min_received' => $gross * 0.995,
         ]);
     }
 
-    public function store(Request $request, LedgerService $ledger, PricingService $pricing)
+    public function store(Request $request, LedgerService $ledger, PricingService $pricing, FeeService $fees)
     {
         $user = Auth::user();
 
@@ -72,9 +73,17 @@ class SwapController extends Controller
             return back()->with('error', 'Swap pricing unavailable for this pair right now.');
         }
 
+        // The swap itself moves the full converted value with no markdown — the platform
+        // fee is charged separately from the Primary Wallet (policy: fees never come from
+        // Trading/Investment), in the destination asset, so it must be checked up front
+        // before committing the swap leg.
         $gross = $data['amount'] * $rate;
-        $fee = $gross * (self::FEE_PCT / 100);
-        $net = $gross - $fee;
+        $fee = round($gross * (self::FEE_PCT / 100), 18);
+        $net = $gross;
+
+        if ($fee > 0 && ! $fees->hasSufficientPrimaryBalance($user, $to, $fee)) {
+            return back()->with('error', "Insufficient {$to->symbol} balance in your Primary Wallet to cover the swap fee (".number_format($fee, 8)." {$to->symbol}). Fund your Primary Wallet first.");
+        }
 
         try {
             $ledger->post(
@@ -92,6 +101,10 @@ class SwapController extends Controller
             return back()->with('error', 'Insufficient available balance to swap.');
         }
 
+        if ($fee > 0) {
+            $fees->charge($user, $to, $fee, 'swap_fee', null, "Swap fee for {$from->symbol} -> {$to->symbol}");
+        }
+
         $swap = SwapTransaction::create([
             'user_id' => $user->id,
             'wallet_account_id' => $wallet->id,
@@ -107,6 +120,6 @@ class SwapController extends Controller
 
         AuditLog::record($user, 'swap.executed', SwapTransaction::class, $swap->id);
 
-        return back()->with('success', "Swapped {$data['amount']} {$from->symbol} for ".number_format($net, 8)." {$to->symbol}.");
+        return back()->with('success', "Swapped {$data['amount']} {$from->symbol} for ".number_format($net, 8)." {$to->symbol}. Platform fee (".number_format($fee, 8)." {$to->symbol}) charged from your Primary Wallet.");
     }
 }

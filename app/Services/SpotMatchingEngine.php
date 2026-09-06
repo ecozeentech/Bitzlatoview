@@ -6,8 +6,6 @@ use App\Models\AuditLog;
 use App\Models\MarketPair;
 use App\Models\Order;
 use App\Models\Trade;
-use App\Models\WalletAccount;
-use App\Support\House;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  */
 class SpotMatchingEngine
 {
-    public function __construct(protected LedgerService $ledger) {}
+    public function __construct(protected LedgerService $ledger, protected FeeService $fees) {}
 
     /**
      * Attempt to match $incoming against the resting book. Returns the quantity filled.
@@ -94,15 +92,16 @@ class SpotMatchingEngine
             $sellerFeePct = $sellOrder->id === $taker->id ? $takerFeePct : $makerFeePct;
             $buyerFee = round($quoteAmount * $buyerFeePct, 18);
             $sellerFee = round($quoteAmount * $sellerFeePct, 18);
-            $feeRevenue = House::wallet(WalletAccount::TYPE_TRADING);
 
             // The resting (maker) side has its funds sitting in `locked`, not `available`,
             // since they were reserved when the order was originally placed. Release exactly
             // the matched portion back to `available` first so the ledger post below (which
-            // always debits from `available`) has something to debit.
+            // always debits from `available`) has something to debit. Locks no longer include
+            // a fee markup — trading fees are charged separately from each side's Primary
+            // Wallet below, not from the Trading Wallet.
             try {
                 if ($maker->side === 'buy') {
-                    $this->ledger->unlockFunds($maker->walletAccount, $market->quoteAsset, (string) ($quoteAmount + $buyerFee));
+                    $this->ledger->unlockFunds($maker->walletAccount, $market->quoteAsset, (string) $quoteAmount);
                 } else {
                     $this->ledger->unlockFunds($maker->walletAccount, $market->baseAsset, (string) $quantity);
                 }
@@ -111,16 +110,12 @@ class SpotMatchingEngine
             }
 
             try {
-                // Buyer pays quoteAmount + their fee; seller receives quoteAmount minus their
-                // fee; both fees flow to the platform's trading fee revenue account. Base
-                // asset simply moves seller -> buyer. Every leg is a real transfer between
-                // real users (or the platform's own disclosed fee account) — no phantom
-                // "house" counterparty standing in as fake liquidity.
+                // Full quoteAmount changes hands between buyer and seller — no fee skimmed
+                // off this leg. Base asset simply moves seller -> buyer.
                 $this->ledger->post(
                     entries: [
-                        ['wallet_account_id' => $buyOrder->wallet_account_id, 'asset_id' => $market->quote_asset_id, 'direction' => 'debit', 'amount' => $quoteAmount + $buyerFee],
-                        ['wallet_account_id' => $sellOrder->wallet_account_id, 'asset_id' => $market->quote_asset_id, 'direction' => 'credit', 'amount' => $quoteAmount - $sellerFee],
-                        ['wallet_account_id' => $feeRevenue->id, 'asset_id' => $market->quote_asset_id, 'direction' => 'credit', 'amount' => $buyerFee + $sellerFee],
+                        ['wallet_account_id' => $buyOrder->wallet_account_id, 'asset_id' => $market->quote_asset_id, 'direction' => 'debit', 'amount' => $quoteAmount],
+                        ['wallet_account_id' => $sellOrder->wallet_account_id, 'asset_id' => $market->quote_asset_id, 'direction' => 'credit', 'amount' => $quoteAmount],
                         ['wallet_account_id' => $sellOrder->wallet_account_id, 'asset_id' => $market->base_asset_id, 'direction' => 'debit', 'amount' => $quantity],
                         ['wallet_account_id' => $buyOrder->wallet_account_id, 'asset_id' => $market->base_asset_id, 'direction' => 'credit', 'amount' => $quantity],
                     ],
@@ -132,6 +127,19 @@ class SpotMatchingEngine
                 // The resting order's locked funds should always cover this, but guard anyway.
                 return false;
             }
+
+            // Trading fees are charged separately from each side's Primary Wallet (platform
+            // policy: fees never come from Trading/Investment). If a side's Primary Wallet
+            // can't cover its fee, the trade itself still stands — the fee is simply waived
+            // and logged rather than unwinding an already-settled trade.
+            $this->fees->attemptCharge(
+                $buyOrder->user, $market->quoteAsset, $buyerFee, 'spot_trade_fee', $taker->id,
+                "Spot trading fee for order #{$buyOrder->id} ({$quantity} {$market->baseAsset->symbol} @ {$price})",
+            );
+            $this->fees->attemptCharge(
+                $sellOrder->user, $market->quoteAsset, $sellerFee, 'spot_trade_fee', $taker->id,
+                "Spot trading fee for order #{$sellOrder->id} ({$quantity} {$market->baseAsset->symbol} @ {$price})",
+            );
 
             Trade::create([
                 'order_id' => $taker->id,

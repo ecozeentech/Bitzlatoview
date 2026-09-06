@@ -72,13 +72,15 @@ class SpotController extends Controller
         }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_TRADING]);
-        $feePct = (float) ($data['type'] === 'market' ? $market->taker_fee_pct : $market->maker_fee_pct) / 100;
 
         // A market order needs its worst-case cost/quantity available up front since it has
         // no resting price to lock against — check (but don't lock) before matching.
         if ($data['type'] === 'market' && $data['side'] === 'buy') {
             $referencePrice = $this->bestOppositePrice($market, 'buy') ?? (float) ($market->quote->price ?? 0);
-            $estimatedCost = $data['quantity'] * $referencePrice * (1 + $feePct);
+            // Trading-fee revenue is charged separately from the Primary Wallet (see
+            // SpotMatchingEngine::executeTrade()), so only the principal needs to be
+            // available here — no fee markup on the trading-wallet balance check.
+            $estimatedCost = $data['quantity'] * $referencePrice;
             if ($wallet->balanceFor($market->quoteAsset)->available < $estimatedCost) {
                 return back()->with('error', 'Insufficient balance to place this order.');
             }
@@ -118,9 +120,11 @@ class SpotController extends Controller
         }
 
         // Limit order: lock funds for whatever remains unmatched so it can rest on the book.
+        // Fee is charged separately from the Primary Wallet at execution time, so only the
+        // principal (no fee markup) needs to be locked here.
         try {
             if ($data['side'] === 'buy') {
-                $ledger->lockFunds($wallet, $market->quoteAsset, (string) ($remaining * $limitPrice * (1 + $feePct)));
+                $ledger->lockFunds($wallet, $market->quoteAsset, (string) ($remaining * $limitPrice));
             } else {
                 $ledger->lockFunds($wallet, $market->baseAsset, (string) $remaining);
             }
@@ -165,8 +169,7 @@ class SpotController extends Controller
         $remaining = $order->quantity - $order->filled_quantity;
 
         if ($order->side === 'buy') {
-            $feePct = (float) $market->maker_fee_pct / 100;
-            $ledger->unlockFunds($order->walletAccount, $market->quoteAsset, (string) ($remaining * $order->price * (1 + $feePct)));
+            $ledger->unlockFunds($order->walletAccount, $market->quoteAsset, (string) ($remaining * $order->price));
         } else {
             $ledger->unlockFunds($order->walletAccount, $market->baseAsset, (string) $remaining);
         }

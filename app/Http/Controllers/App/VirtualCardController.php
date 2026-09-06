@@ -10,6 +10,7 @@ use App\Models\CardTransaction;
 use App\Models\FeatureFlag;
 use App\Models\VirtualCard;
 use App\Models\WalletAccount;
+use App\Services\FeeService;
 use App\Services\LedgerService;
 use App\Services\TransactionalMailService;
 use App\Support\House;
@@ -27,7 +28,7 @@ class VirtualCardController extends Controller
         return view('app.virtual-cards.index', compact('cards', 'settings', 'issuingEnabled'));
     }
 
-    public function store(Request $request, TransactionalMailService $mailer)
+    public function store(Request $request, TransactionalMailService $mailer, FeeService $fees)
     {
         $user = Auth::user();
         $settings = CardSetting::current();
@@ -44,6 +45,13 @@ class VirtualCardController extends Controller
         ]);
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => WalletAccount::TYPE_PRIMARY]);
+        $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
+        $issuanceFee = (float) $settings->issuance_fee;
+
+        if ($issuanceFee > 0 && ! $fees->hasSufficientPrimaryBalance($user, $usdt, $issuanceFee)) {
+            return back()->with('error', "Insufficient USDT balance in your Primary Wallet to cover the card issuance fee (\${$issuanceFee}).");
+        }
+
         $lastFour = str_pad((string) mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
 
         $card = VirtualCard::create($data + [
@@ -56,6 +64,10 @@ class VirtualCardController extends Controller
             'funding_wallet_account_id' => $wallet->id,
             'status' => 'pending',
         ]);
+
+        if ($issuanceFee > 0) {
+            $fees->charge($user, $usdt, $issuanceFee, 'virtual_card_issuance_fee', $card->id, "Issuance fee for card ending {$lastFour}");
+        }
 
         AuditLog::record($user, 'virtual_card.requested', VirtualCard::class, $card->id);
         $mailer->send($user, 'virtual_card_requested', ['name' => $user->name, 'last_four' => $lastFour]);
@@ -93,7 +105,7 @@ class VirtualCardController extends Controller
         return back()->with('success', 'Spending limit updated.');
     }
 
-    public function fund(Request $request, VirtualCard $card, LedgerService $ledger)
+    public function fund(Request $request, VirtualCard $card, LedgerService $ledger, FeeService $fees)
     {
         $this->authorizeOwner($card);
         abort_unless($card->status === 'active', 422, 'This card is not yet active.');
@@ -103,6 +115,12 @@ class VirtualCardController extends Controller
         $wallet = $card->fundingWallet;
         $usdt = Asset::where('symbol', 'USDT')->firstOrFail();
         $house = House::wallet($wallet->type);
+        $settings = CardSetting::current();
+        $fundingFee = round($data['amount'] * ((float) $settings->funding_fee_pct / 100), 8);
+
+        if ($fundingFee > 0 && ! $fees->hasSufficientPrimaryBalance(Auth::user(), $usdt, $fundingFee)) {
+            return back()->with('error', 'Insufficient USDT balance in your Primary Wallet to cover the card funding fee ('.number_format($fundingFee, 2).' USDT).');
+        }
 
         try {
             $ledger->post(
@@ -119,6 +137,10 @@ class VirtualCardController extends Controller
             return back()->with('error', 'Insufficient balance in your Primary Wallet.');
         }
 
+        if ($fundingFee > 0) {
+            $fees->charge(Auth::user(), $usdt, $fundingFee, 'virtual_card_funding_fee', $card->id, "Funding fee for card ending {$card->last_four}");
+        }
+
         CardTransaction::create([
             'virtual_card_id' => $card->id,
             'merchant' => 'Bitzlatoview Card Top-Up',
@@ -127,7 +149,7 @@ class VirtualCardController extends Controller
             'occurred_at' => now(),
         ]);
 
-        return back()->with('success', 'Card funding recorded on your account ledger. No real payment network transaction occurred — this card cannot be used for real purchases until a licensed issuing provider is connected.');
+        return back()->with('success', 'Card funding recorded on your account ledger'.($fundingFee > 0 ? ' (funding fee of '.number_format($fundingFee, 2).' USDT charged from your Primary Wallet)' : '').'. No real payment network transaction occurred — this card cannot be used for real purchases until a licensed issuing provider is connected.');
     }
 
     public function reveal(VirtualCard $card)
