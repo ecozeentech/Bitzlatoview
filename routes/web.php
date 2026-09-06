@@ -83,6 +83,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::prefix('markets')->name('markets.')->group(function () {
     Route::get('/', [MarketController::class, 'index'])->name('index');
+    Route::get('/prices', [MarketController::class, 'prices'])->name('prices');
     Route::get('/top-gainers', [MarketController::class, 'topGainers'])->name('top-gainers');
     Route::get('/top-losers', [MarketController::class, 'topLosers'])->name('top-losers');
     Route::get('/new-listings', [MarketController::class, 'newListings'])->name('new-listings');

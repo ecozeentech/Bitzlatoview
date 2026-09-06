@@ -100,9 +100,9 @@
                     <div class="flex items-center gap-2">
                         <x-asset-icon :symbol="$m->baseAsset->symbol" />
                         <p class="font-semibold">{{ $m->baseAsset->symbol }}</p>
-                        <x-price-change class="ml-auto" :value="$chg" />
+                        <x-price-change class="ml-auto" data-live-change="{{ $m->symbol }}" :value="$chg" />
                     </div>
-                    <p class="mt-2 font-numeric text-lg font-bold">${{ number_format($m->quote?->price ?? 0, 2) }}</p>
+                    <p class="mt-2 font-numeric text-lg font-bold" data-live-price="{{ $m->symbol }}">${{ number_format($m->quote?->price ?? 0, 2) }}</p>
                     <p class="mt-1 text-xs text-text-muted">{{ $blurb }}</p>
                 </a>
             @empty
@@ -130,8 +130,8 @@
                         @foreach ($topGainers as $m)
                             <tr>
                                 <td class="flex items-center gap-2"><x-asset-icon :symbol="$m->baseAsset->symbol" /> {{ $m->symbol }}</td>
-                                <td class="font-numeric">${{ number_format($m->quote->price ?? 0, 2) }}</td>
-                                <td><x-price-change :value="$m->quote->change_24h_pct ?? 0" /></td>
+                                <td class="font-numeric" data-live-price="{{ $m->symbol }}">${{ number_format($m->quote->price ?? 0, 2) }}</td>
+                                <td><x-price-change data-live-change="{{ $m->symbol }}" :value="$m->quote->change_24h_pct ?? 0" /></td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -249,7 +249,7 @@
             @forelse ($watchlist as $item)
                 <div class="flex items-center justify-between border-b border-border/60 py-2 text-sm last:border-0">
                     <span class="flex items-center gap-2"><x-asset-icon :symbol="$item->marketPair->baseAsset->symbol" /> {{ $item->marketPair->symbol }}</span>
-                    <x-price-change :value="$item->marketPair->quote->change_24h_pct ?? 0" />
+                    <x-price-change data-live-change="{{ $item->marketPair->symbol }}" :value="$item->marketPair->quote->change_24h_pct ?? 0" />
                 </div>
             @empty
                 <p class="text-sm text-text-muted">No watchlist items yet. Star a market to add it here.</p>

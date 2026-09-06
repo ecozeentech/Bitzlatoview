@@ -10,14 +10,15 @@
                 @endforeach
             </select>
             <div>
-                <p class="font-numeric text-2xl font-bold">${{ number_format($market->quote->price ?? 0, 4) }}</p>
-                <x-price-change :value="$market->quote->change_24h_pct ?? 0" />
+                <p class="font-numeric text-2xl font-bold" data-live-price="{{ $market->symbol }}" data-price-decimals="4">${{ number_format($market->quote->price ?? 0, 4) }}</p>
+                <x-price-change data-live-change="{{ $market->symbol }}" :value="$market->quote->change_24h_pct ?? 0" />
             </div>
         </div>
         <div class="flex gap-4 text-sm text-text-muted">
-            <span>24h High: <span class="font-numeric text-text-main">${{ number_format($market->quote->high_24h ?? 0, 2) }}</span></span>
-            <span>24h Low: <span class="font-numeric text-text-main">${{ number_format($market->quote->low_24h ?? 0, 2) }}</span></span>
-            <span>24h Vol: <span class="font-numeric text-text-main">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</span></span>
+            <span>24h High: <span class="font-numeric text-text-main" data-live-high="{{ $market->symbol }}">${{ number_format($market->quote->high_24h ?? 0, 2) }}</span></span>
+            <span>24h Low: <span class="font-numeric text-text-main" data-live-low="{{ $market->symbol }}">${{ number_format($market->quote->low_24h ?? 0, 2) }}</span></span>
+            <span>24h Vol: <span class="font-numeric text-text-main" data-live-volume="{{ $market->symbol }}">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</span></span>
+            <span class="text-text-muted/70" data-live-updated-at>Live · updated {{ now()->format('H:i:s') }}</span>
         </div>
     </div>
 

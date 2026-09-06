@@ -21,11 +21,11 @@
                             <span class="font-semibold">{{ $market->symbol }}</span>
                         </span>
                     </td>
-                    <td class="font-numeric">${{ number_format($market->quote->price ?? 0, ($market->quote->price ?? 0) < 1 ? 4 : 2) }}</td>
-                    <td><x-price-change :value="$market->quote->change_24h_pct ?? 0" /></td>
-                    <td class="font-numeric text-text-muted">${{ number_format($market->quote->high_24h ?? 0, 2) }}</td>
-                    <td class="font-numeric text-text-muted">${{ number_format($market->quote->low_24h ?? 0, 2) }}</td>
-                    <td class="font-numeric text-text-muted">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</td>
+                    <td class="font-numeric" data-live-price="{{ $market->symbol }}">${{ number_format($market->quote->price ?? 0, ($market->quote->price ?? 0) < 1 ? 4 : 2) }}</td>
+                    <td><x-price-change data-live-change="{{ $market->symbol }}" :value="$market->quote->change_24h_pct ?? 0" /></td>
+                    <td class="font-numeric text-text-muted" data-live-high="{{ $market->symbol }}">${{ number_format($market->quote->high_24h ?? 0, 2) }}</td>
+                    <td class="font-numeric text-text-muted" data-live-low="{{ $market->symbol }}">${{ number_format($market->quote->low_24h ?? 0, 2) }}</td>
+                    <td class="font-numeric text-text-muted" data-live-volume="{{ $market->symbol }}">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</td>
                     <td><a href="{{ route('login') }}" class="text-sm text-brand hover:underline">Trade</a></td>
                 </tr>
             @empty

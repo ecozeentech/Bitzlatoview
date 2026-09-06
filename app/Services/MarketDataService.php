@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\FuturesMarket;
 use App\Models\MarketPair;
 use App\Models\Quote;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -74,10 +76,31 @@ class MarketDataService
                 ]
             );
 
+            // PricingService caches usdPrice() for 30s independently of this sync's cadence —
+            // forget it now so every fee/order/swap/futures calculation immediately sees the
+            // fresh price instead of serving a stale cached value for up to 30 more seconds.
+            Cache::forget("price:{$pair->baseAsset->symbol}");
+
+            $this->syncFuturesMarkPrice($pair->baseAsset->id, (float) $row['current_price']);
+
             $updated++;
         }
 
         return $updated;
+    }
+
+    /**
+     * Futures markets display their own `mark_price`/`index_price` (see the Futures Trading
+     * page) which otherwise only moves when a user opens/closes a position on that market —
+     * keep it tracking the underlying asset's live spot price so the futures list never looks
+     * stale between trades, same as every other market on the platform.
+     */
+    protected function syncFuturesMarkPrice(int $assetId, float $price): void
+    {
+        FuturesMarket::where('asset_id', $assetId)->update([
+            'mark_price' => $price,
+            'index_price' => $price,
+        ]);
     }
 
     /**

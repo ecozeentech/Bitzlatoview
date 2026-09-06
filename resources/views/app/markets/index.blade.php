@@ -16,11 +16,11 @@
                             </form>
                         </td>
                         <td class="flex items-center gap-2"><x-asset-icon :symbol="$market->baseAsset->symbol" /> <span class="font-semibold">{{ $market->symbol }}</span></td>
-                        <td class="font-numeric">${{ number_format($market->quote->price ?? 0, 4) }}</td>
-                        <td><x-price-change :value="$market->quote->change_24h_pct ?? 0" /></td>
-                        <td class="font-numeric text-text-muted">${{ number_format($market->quote->high_24h ?? 0, 2) }}</td>
-                        <td class="font-numeric text-text-muted">${{ number_format($market->quote->low_24h ?? 0, 2) }}</td>
-                        <td class="font-numeric text-text-muted">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</td>
+                        <td class="font-numeric" data-live-price="{{ $market->symbol }}" data-price-decimals="4">${{ number_format($market->quote->price ?? 0, 4) }}</td>
+                        <td><x-price-change data-live-change="{{ $market->symbol }}" :value="$market->quote->change_24h_pct ?? 0" /></td>
+                        <td class="font-numeric text-text-muted" data-live-high="{{ $market->symbol }}">${{ number_format($market->quote->high_24h ?? 0, 2) }}</td>
+                        <td class="font-numeric text-text-muted" data-live-low="{{ $market->symbol }}">${{ number_format($market->quote->low_24h ?? 0, 2) }}</td>
+                        <td class="font-numeric text-text-muted" data-live-volume="{{ $market->symbol }}">${{ number_format($market->quote->volume_24h ?? 0, 0) }}</td>
                         <td><a href="{{ url('/app/spot/'.$market->symbol) }}" class="text-sm text-brand hover:underline">Trade</a></td>
                     </tr>
                 @endforeach
