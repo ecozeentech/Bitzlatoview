@@ -45,4 +45,34 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Feature flag updated.');
     }
+
+    public function withdrawalFee()
+    {
+        $settings = [
+            'enabled' => SystemSetting::getValue('withdrawal_fee_enabled', true),
+            'percentage' => SystemSetting::getValue('withdrawal_fee_percentage', 0.1),
+            'min_fee' => SystemSetting::getValue('withdrawal_fee_min'),
+            'max_fee' => SystemSetting::getValue('withdrawal_fee_max'),
+        ];
+
+        return view('admin.settings.withdrawal-fee', compact('settings'));
+    }
+
+    public function updateWithdrawalFee(Request $request)
+    {
+        $data = $request->validate([
+            'percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'min_fee' => ['nullable', 'numeric', 'min:0'],
+            'max_fee' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        SystemSetting::updateOrCreate(['key' => 'withdrawal_fee_enabled'], ['value' => $request->boolean('enabled') ? '1' : '0', 'type' => 'boolean']);
+        SystemSetting::updateOrCreate(['key' => 'withdrawal_fee_percentage'], ['value' => (string) $data['percentage'], 'type' => 'number']);
+        SystemSetting::updateOrCreate(['key' => 'withdrawal_fee_min'], ['value' => $data['min_fee'] !== null ? (string) $data['min_fee'] : null, 'type' => 'number']);
+        SystemSetting::updateOrCreate(['key' => 'withdrawal_fee_max'], ['value' => $data['max_fee'] !== null ? (string) $data['max_fee'] : null, 'type' => 'number']);
+
+        AuditLog::record(auth()->user(), 'withdrawal_fee_setting.updated', null, null, null, $data + ['enabled' => $request->boolean('enabled')]);
+
+        return back()->with('success', 'Withdrawal fee settings updated.');
+    }
 }
