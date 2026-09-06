@@ -22,7 +22,23 @@
     </div>
 
     <div class="grid gap-4 sm:grid-cols-3">
-        <div class="glass-card p-4"><p class="text-xs text-text-muted">KYC Status</p><p class="pill-{{ $user->kyc_status === 'approved' ? 'success' : 'warning' }} mt-1">{{ str_replace('_',' ',$user->kyc_status) }}</p></div>
+        <div class="glass-card p-4">
+            <p class="text-xs text-text-muted">KYC Status</p>
+            <p class="pill-{{ $user->kyc_status === 'approved' ? 'success' : 'warning' }} mt-1">{{ str_replace('_',' ',$user->kyc_status) }}</p>
+            @if ($user->kyc_status !== 'approved')
+                <details class="mt-2">
+                    <summary class="cursor-pointer text-xs text-brand hover:underline">Manually approve (no docs)</summary>
+                    <form method="POST" action="{{ route('admin.kyc.manual-approve', $user) }}" class="mt-2 space-y-2">
+                        @csrf
+                        <input type="text" name="reason" class="input-field text-xs" placeholder="Reason (required)" required>
+                        @if (auth()->user()->two_factor_enabled)
+                            <input type="text" name="totp_code" class="input-field text-xs" placeholder="2FA code" required>
+                        @endif
+                        <button class="btn-outline w-full text-xs">Manually Approve KYC</button>
+                    </form>
+                </details>
+            @endif
+        </div>
         <div class="glass-card p-4"><p class="text-xs text-text-muted">Account Status</p><p class="pill-{{ $user->status === 'active' ? 'success' : 'danger' }} mt-1">{{ $user->status }}</p></div>
         <div class="glass-card p-4">
             <p class="text-xs text-text-muted">Role</p>

@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\RequiresTwoFactor;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\KycReview;
 use App\Models\KycSubmission;
+use App\Models\User;
 use App\Services\TransactionalMailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class KycController extends Controller
 {
+    use RequiresTwoFactor;
+
     /**
      * Stream a KYC document from the private disk. Never publicly reachable — only an
      * authenticated admin can view it via this route.
@@ -77,5 +82,50 @@ class KycController extends Controller
         KycReview::create(['kyc_submission_id' => $submission->id, 'reviewer_id' => auth()->id(), 'decision' => 'more_info_required', 'notes' => $data['reason']]);
 
         return back()->with('success', 'Requested more information from the user.');
+    }
+
+    /**
+     * Admin can activate KYC for a user directly, without requiring them to upload any
+     * documents — e.g. for a trusted user verified through another channel, or to unblock
+     * someone while document review is still pending. Works whether or not the user has
+     * ever submitted a KycSubmission at all. Always requires a written reason for the audit
+     * trail, and (if the admin has 2FA enabled) a valid current 2FA code.
+     */
+    public function manuallyApprove(Request $request, User $user, TransactionalMailService $mailer)
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        if ($error = $this->verifyTwoFactor($request, Auth::user())) {
+            return back()->with('error', $error);
+        }
+
+        $submission = KycSubmission::firstOrCreate(['user_id' => $user->id], ['status' => 'not_started']);
+
+        $submission->update([
+            'status' => 'approved',
+            'manually_verified' => true,
+            'manual_approval_reason' => $data['reason'],
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+        $user->forceFill(['kyc_status' => 'approved'])->save();
+
+        KycReview::create([
+            'kyc_submission_id' => $submission->id,
+            'reviewer_id' => Auth::id(),
+            'decision' => 'approved',
+            'notes' => "Manually approved without document upload: {$data['reason']}",
+        ]);
+
+        AuditLog::record(Auth::user(), 'kyc.manually_approved', KycSubmission::class, $submission->id, null, [
+            'user_id' => $user->id,
+            'reason' => $data['reason'],
+        ]);
+
+        $mailer->send($user, 'kyc_approved', ['name' => $user->name]);
+
+        return back()->with('success', "KYC manually approved for {$user->email} — no document upload was required.");
     }
 }

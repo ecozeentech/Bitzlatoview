@@ -17,6 +17,9 @@
         <div><span class="text-text-muted">Tax residency:</span> {{ $submission->tax_residency }}</div>
         <div><span class="text-text-muted">PEP:</span> {{ $submission->is_pep ? 'Yes' : 'No' }}</div>
         <div><span class="text-text-muted">Sanctioned:</span> {{ $submission->is_sanctioned ? 'Yes' : 'No' }}</div>
+        @if ($submission->manually_verified)
+            <div class="sm:col-span-2"><span class="pill-info">Manually verified by admin</span> — {{ $submission->manual_approval_reason }}</div>
+        @endif
     </div>
 
     <div class="glass-card p-5">
@@ -54,5 +57,20 @@
         </form>
     </div>
     @endif
+
+    @unless ($submission->status === 'approved')
+    <div class="glass-card p-5 space-y-2">
+        <h2 class="font-semibold">Manually Approve (No Documents Required)</h2>
+        <p class="text-xs text-text-muted">Activates this user's KYC status immediately without requiring any document upload. Use for users verified through another channel. Fully audited.</p>
+        <form method="POST" action="{{ route('admin.kyc.manual-approve', $submission->user) }}" class="flex flex-wrap gap-2">
+            @csrf
+            <input type="text" name="reason" class="input-field flex-1" placeholder="Reason for manual approval (required)" required>
+            @if (auth()->user()->two_factor_enabled)
+                <input type="text" name="totp_code" class="input-field w-28" placeholder="2FA code" required>
+            @endif
+            <button class="btn-outline text-sm">Manually Approve KYC</button>
+        </form>
+    </div>
+    @endunless
 </div>
 @endsection
