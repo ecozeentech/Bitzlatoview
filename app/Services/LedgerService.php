@@ -135,6 +135,33 @@ class LedgerService
     }
 
     /**
+     * Admin override: directly set a wallet's locked balance to a new value, e.g. to free
+     * funds that got stuck locked by a bug, or to correct a bad state. This does not move
+     * value anywhere (it never touches `available` or any other wallet) — it is purely a
+     * manual correction of the locked bucket, so it is deliberately NOT modeled as a ledger
+     * transaction (there is no real counterparty). The caller is responsible for creating an
+     * AuditLog entry with the returned before/after amounts.
+     *
+     * @return array{before: string, after: string}
+     */
+    public function adjustLockedBalance(WalletAccount $walletAccount, Asset $asset, string $newLockedAmount): array
+    {
+        if (bccomp($newLockedAmount, '0', 18) < 0) {
+            throw new InvalidArgumentException('Locked balance cannot be negative.');
+        }
+
+        return DB::transaction(function () use ($walletAccount, $asset, $newLockedAmount) {
+            $balance = $this->lockedBalance($walletAccount->id, $asset->id);
+            $before = (string) $balance->locked;
+
+            $balance->locked = bcadd('0', $newLockedAmount, 18);
+            $balance->save();
+
+            return ['before' => $before, 'after' => (string) $balance->locked];
+        });
+    }
+
+    /**
      * Release previously locked funds directly into another wallet (e.g. P2P escrow release).
      * This posts a proper ledger transaction: debit the locked pool (asset leaves seller),
      * credit the destination wallet.
