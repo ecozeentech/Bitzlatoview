@@ -32,7 +32,7 @@
                 <label class="label-field">Payment method</label>
                 <select name="payment_method_id" x-model="methodId" class="input-field">
                     @foreach ($paymentMethods as $method)
-                        <option value="{{ $method->id }}">{{ $method->label() }} ({{ $method->currency }})</option>
+                        <option value="{{ $method->id }}">{{ $method->label() }}</option>
                     @endforeach
                 </select>
             </div>
@@ -56,7 +56,10 @@
 
             <div>
                 <label class="label-field">Amount sent</label>
-                <input type="number" step="0.00000001" name="amount" class="input-field" required>
+                <input type="number" step="0.00000001" name="amount" class="input-field" @if($depositMin !== null) min="{{ $depositMin }}" @endif @if($depositMax !== null) max="{{ $depositMax }}" @endif required>
+                @if ($depositMin !== null || $depositMax !== null)
+                    <p class="mt-1 text-xs text-text-muted">Platform limit: {{ $depositMin !== null ? number_format($depositMin, 8) : 'no minimum' }} – {{ $depositMax !== null ? number_format($depositMax, 8) : 'no maximum' }} per deposit.</p>
+                @endif
             </div>
 
             <div>
