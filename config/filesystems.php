@@ -33,7 +33,12 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Deliberately NOT served — private files on this disk (KYC documents, deposit
+            // proof-of-payment uploads) are only ever served through authenticated admin
+            // controller actions (see Admin\KycController::document(), Admin\DepositController::
+            // proof()), never through a generic public URL. This also frees up the /storage
+            // URI below for the `public` disk to use instead (only one disk may serve there).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
@@ -43,6 +48,18 @@ return [
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            // Lets Laravel serve every file on this disk (payment-method QR codes, avatars,
+            // branding logos, NFT images, etc.) directly at /storage/{path} on its own,
+            // without depending on the `public/storage` symlink `php artisan storage:link`
+            // creates. That symlink is unreliable on a lot of shared hosting (Hostinger
+            // included) — some control panels block symlinks outright, others silently drop
+            // them on a redeploy/file-manager re-upload — so every image on the platform was
+            // breaking the moment that symlink wasn't present. This built-in Laravel "serve"
+            // route is a permanent fix that doesn't depend on the filesystem supporting
+            // symlinks at all; `storage:link` is still run during setup as a harmless,
+            // slightly faster fallback (the webserver serves the symlinked file directly
+            // instead of routing through PHP) wherever the host does support it.
+            'serve' => true,
             'throw' => false,
             'report' => false,
         ],
