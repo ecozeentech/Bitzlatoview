@@ -513,6 +513,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'admin']
     Route::post('/settings/feature-flags/{flag}/toggle', [AdminSettingsController::class, 'toggleFlag'])->name('settings.feature-flags.toggle');
     Route::get('/settings/withdrawal-fee', [AdminSettingsController::class, 'withdrawalFee'])->name('settings.withdrawal-fee');
     Route::post('/settings/withdrawal-fee', [AdminSettingsController::class, 'updateWithdrawalFee'])->name('settings.withdrawal-fee.update');
+    Route::get('/settings/deposit-withdrawal-limits', [AdminSettingsController::class, 'depositWithdrawalLimits'])->name('settings.deposit-withdrawal-limits');
+    Route::post('/settings/deposit-withdrawal-limits', [AdminSettingsController::class, 'updateDepositWithdrawalLimits'])->name('settings.deposit-withdrawal-limits.update');
 
     Route::get('/wallets/locked-balances', [LockedBalanceController::class, 'index'])->name('wallets.locked-balances.index');
     Route::post('/wallets/locked-balances/{balance}/unlock', [LockedBalanceController::class, 'unlock'])->name('wallets.locked-balances.unlock');
