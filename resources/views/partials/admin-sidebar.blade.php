@@ -12,6 +12,7 @@
             ['Deposit Requests', 'admin/deposits'],
             ['Withdrawal Requests', 'admin/withdrawals'],
             ['Withdrawal Fee', 'admin/settings/withdrawal-fee'],
+            ['Deposit & Withdrawal Limits', 'admin/settings/deposit-withdrawal-limits'],
             ['Locked Balances', 'admin/wallets/locked-balances'],
             ['Ledger', 'admin/ledger'],
             ['Balance Adjustments', 'admin/adjustments'],

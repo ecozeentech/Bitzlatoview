@@ -123,7 +123,10 @@
 
             <div>
                 <label class="label-field">Amount</label>
-                <input type="number" step="0.00000001" name="amount" x-model.number="amount" class="input-field" required>
+                <input type="number" step="0.00000001" name="amount" x-model.number="amount" class="input-field" @if($withdrawalMin !== null) min="{{ $withdrawalMin }}" @endif @if($withdrawalMax !== null) max="{{ $withdrawalMax }}" @endif required>
+                @if ($withdrawalMin !== null || $withdrawalMax !== null)
+                    <p class="mt-1 text-xs text-text-muted">Platform limit: {{ $withdrawalMin !== null ? number_format($withdrawalMin, 8) : 'no minimum' }} – {{ $withdrawalMax !== null ? number_format($withdrawalMax, 8) : 'no maximum' }} per withdrawal.</p>
+                @endif
                 <div class="mt-2 rounded-lg border border-border bg-surface-2 p-3 text-xs" x-show="amount > 0" x-cloak>
                     <div class="flex justify-between"><span class="text-text-muted">Withdrawal fee (<span x-text="feePct"></span>%)</span><span class="font-numeric" x-text="fee.toFixed(8)"></span></div>
                     <div class="mt-1 flex justify-between font-semibold"><span>You will receive</span><span class="font-numeric text-brand" x-text="net.toFixed(8)"></span></div>

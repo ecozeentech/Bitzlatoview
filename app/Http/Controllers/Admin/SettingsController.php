@@ -75,4 +75,57 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Withdrawal fee settings updated.');
     }
+
+    /**
+     * Platform-wide deposit/withdrawal amount floors and ceilings, applied to every user on top
+     * of (for deposits) each payment method's own min_amount/max_amount — see
+     * App\Http\Controllers\App\FundingController::storeDeposit()/storeWithdraw().
+     */
+    public function depositWithdrawalLimits()
+    {
+        $settings = [
+            'deposit_min' => SystemSetting::getValue('deposit_min_amount'),
+            'deposit_max' => SystemSetting::getValue('deposit_max_amount'),
+            'withdrawal_min' => SystemSetting::getValue('withdrawal_min_amount'),
+            'withdrawal_max' => SystemSetting::getValue('withdrawal_max_amount'),
+        ];
+
+        return view('admin.settings.deposit-withdrawal-limits', compact('settings'));
+    }
+
+    public function updateDepositWithdrawalLimits(Request $request)
+    {
+        $data = $request->validate([
+            'deposit_min' => ['nullable', 'numeric', 'min:0'],
+            'deposit_max' => ['nullable', 'numeric', 'min:0'],
+            'withdrawal_min' => ['nullable', 'numeric', 'min:0'],
+            'withdrawal_max' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        if (isset($data['deposit_min'], $data['deposit_max']) && $data['deposit_max'] < $data['deposit_min']) {
+            return back()->withInput()->with('error', 'The deposit maximum must be greater than or equal to the deposit minimum.');
+        }
+
+        if (isset($data['withdrawal_min'], $data['withdrawal_max']) && $data['withdrawal_max'] < $data['withdrawal_min']) {
+            return back()->withInput()->with('error', 'The withdrawal maximum must be greater than or equal to the withdrawal minimum.');
+        }
+
+        $keys = [
+            'deposit_min' => 'deposit_min_amount',
+            'deposit_max' => 'deposit_max_amount',
+            'withdrawal_min' => 'withdrawal_min_amount',
+            'withdrawal_max' => 'withdrawal_max_amount',
+        ];
+
+        foreach ($keys as $field => $settingKey) {
+            SystemSetting::updateOrCreate(
+                ['key' => $settingKey],
+                ['value' => isset($data[$field]) && $data[$field] !== '' ? (string) $data[$field] : null, 'type' => 'number']
+            );
+        }
+
+        AuditLog::record(auth()->user(), 'deposit_withdrawal_limits.updated', null, null, null, $data);
+
+        return back()->with('success', 'Deposit & withdrawal limits updated.');
+    }
 }

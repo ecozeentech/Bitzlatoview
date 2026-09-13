@@ -27,6 +27,8 @@ class FundingController extends Controller
             'assets' => Asset::where('is_active', true)->orderBy('symbol')->get(),
             'paymentMethods' => PaymentMethod::where('is_active', true)->orderBy('sort_order')->get(),
             'selectedWallet' => $request->query('wallet', 'primary'),
+            'depositMin' => SystemSetting::getValue('deposit_min_amount'),
+            'depositMax' => SystemSetting::getValue('deposit_max_amount'),
         ]);
     }
 
@@ -47,6 +49,15 @@ class FundingController extends Controller
 
         if ($data['amount'] < $method->min_amount || ($method->max_amount && $data['amount'] > $method->max_amount)) {
             return back()->withInput()->with('error', "This payment method accepts amounts between {$method->min_amount} and ".($method->max_amount ?? '∞')." {$method->currency}.");
+        }
+
+        // Platform-wide floor/ceiling on top of the payment method's own min/max — see
+        // Admin\SettingsController::depositWithdrawalLimits(). Either can be unset (no limit).
+        $globalMin = SystemSetting::getValue('deposit_min_amount');
+        $globalMax = SystemSetting::getValue('deposit_max_amount');
+
+        if (($globalMin !== null && $data['amount'] < $globalMin) || ($globalMax !== null && $data['amount'] > $globalMax)) {
+            return back()->withInput()->with('error', 'Deposits on this platform must be between '.($globalMin ?? '0').' and '.($globalMax ?? '∞').'.');
         }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => $data['wallet_type']]);
@@ -86,6 +97,8 @@ class FundingController extends Controller
                 ->with('asset', 'walletAccount')->latest()->get(),
             'withdrawalFeeEnabled' => (bool) SystemSetting::getValue('withdrawal_fee_enabled', true),
             'withdrawalFeePct' => (float) SystemSetting::getValue('withdrawal_fee_percentage', 0.1),
+            'withdrawalMin' => SystemSetting::getValue('withdrawal_min_amount'),
+            'withdrawalMax' => SystemSetting::getValue('withdrawal_max_amount'),
         ]);
     }
 
@@ -103,6 +116,15 @@ class FundingController extends Controller
             'amount' => ['required', 'numeric', 'gt:0'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
+
+        // Platform-wide floor/ceiling on every withdrawal — see
+        // Admin\SettingsController::depositWithdrawalLimits(). Either can be unset (no limit).
+        $globalMin = SystemSetting::getValue('withdrawal_min_amount');
+        $globalMax = SystemSetting::getValue('withdrawal_max_amount');
+
+        if (($globalMin !== null && $data['amount'] < $globalMin) || ($globalMax !== null && $data['amount'] > $globalMax)) {
+            return back()->withInput()->with('error', 'Withdrawals on this platform must be between '.($globalMin ?? '0').' and '.($globalMax ?? '∞').'.');
+        }
 
         $wallet = WalletAccount::firstOrCreate(['user_id' => $user->id, 'type' => $data['wallet_type']]);
         $asset = Asset::findOrFail($data['asset_id']);
